@@ -7,16 +7,22 @@ is a power of two — for all such graphs up to a frontier order `n`.
 This is a clean rebuild from [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md),
 re-deriving the method from first principles with a full validation-gate suite.
 
-**What this rebuild establishes (verified):** the method is fully reconstructed
-and validated (Gate 3 proves the encoding sound at n=10; Gate 4 reproduces the
-published n≤16 baseline). A cost-guarded Modal run then verified **UNSAT for
-n = 17, 18, 19** — each independently re-proven by a second solver and certified
-cycle-by-cycle — giving **bound ≥ 20** (any general min-degree-3 counterexample
-needs ≥ 20 vertices). This **extends the 20-year-old published general frontier of
-n ≥ 17 by three vertices, via the first SAT method applied to the conjecture.**
-n = 20 walled at the 55-min budget. Full table: [`experiments/results.md`](erdos_gyarfas/experiments/results.md).
-Reaching the salvage's n = 23 needs *complete* symmetry breaking (SMS) — see
-**Performance & frontier reach**.
+**What this establishes (verified):** the method is fully reconstructed and
+validated (Gate 3 proves the encoding sound at n=10; Gate 4 reproduces the
+published n≤16 baseline). Two independent computational tracks then extend the
+**general** minimum-degree-3 frontier (counterexample needs ≥ N vertices), which
+had stood at **N ≥ 17** (Royle & Markström, ~2004) for two decades:
+
+- **Pure-Python CEGAR-SAT** (this repo's own solver): verified n ≤ 19, each UNSAT
+  independently re-proven by a second solver and certified cycle-by-cycle ⟹
+  **bound ≥ 20**. ([`experiments/results.md`](erdos_gyarfas/experiments/results.md))
+- **SAT-Modulo-Symmetries** (Kirchweger–Szeider, with the Glasgow subgraph solver;
+  complete symmetry breaking): verified n ≤ 28 ⟹ **bound ≥ 29**, the first SAT/SMS
+  attack on this conjecture. ([`experiments/sms_results.md`](erdos_gyarfas/experiments/sms_results.md))
+
+These advance the **general** (non-regular-allowed) frontier from 16 to 28; they do
+**not** surpass Markström's separate **cubic** (3-regular) bound of 30. Soundness is
+anchored against nauty ground truth at n=10 and the published baseline at n≤16.
 
 ## The idea in one paragraph
 
