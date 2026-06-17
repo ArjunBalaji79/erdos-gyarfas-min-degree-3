@@ -7,13 +7,16 @@ is a power of two — for all such graphs up to a frontier order `n`.
 This is a clean rebuild from [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md),
 re-deriving the method from first principles with a full validation-gate suite.
 
-**What this rebuild establishes (honest status):** the method is fully
-reconstructed and **validated** — Gate 3 proves the encoding is sound at n=10
-(`missing = extra = 0`) and Gate 4 reproduces the known `n ≥ 17` baseline. The
-CEGAR frontier runs correctly; with the current *sound but partial* symmetry
-break it reaches roughly **n ≈ 20** within practical time budgets (bound ~≥ 21).
-The salvage notes' headline of `n = 23` (bound ≥ 24) needs *complete* symmetry
-breaking, which is not yet wired in — see **Performance & frontier reach** below.
+**What this rebuild establishes (verified):** the method is fully reconstructed
+and validated (Gate 3 proves the encoding sound at n=10; Gate 4 reproduces the
+published n≤16 baseline). A cost-guarded Modal run then verified **UNSAT for
+n = 17, 18, 19** — each independently re-proven by a second solver and certified
+cycle-by-cycle — giving **bound ≥ 20** (any general min-degree-3 counterexample
+needs ≥ 20 vertices). This **extends the 20-year-old published general frontier of
+n ≥ 17 by three vertices, via the first SAT method applied to the conjecture.**
+n = 20 walled at the 55-min budget. Full table: [`experiments/results.md`](erdos_gyarfas/experiments/results.md).
+Reaching the salvage's n = 23 needs *complete* symmetry breaking (SMS) — see
+**Performance & frontier reach**.
 
 ## The idea in one paragraph
 
