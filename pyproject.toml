@@ -1,0 +1,25 @@
+[project]
+name = "erdos-gyarfas"
+version = "0.1.0"
+description = "CEGAR-SAT verification of the Erdos-Gyarfas conjecture for min-degree-3 graphs (rebuild from salvage notes)"
+requires-python = ">=3.10"
+dependencies = [
+    "python-sat>=1.8",
+    "networkx>=3.0",
+]
+
+[project.optional-dependencies]
+# Cloud frontier runner. nauty (geng/labelg) is a system dependency (brew install nauty).
+cloud = ["modal>=1.0"]
+dev = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["erdos_gyarfas*"]

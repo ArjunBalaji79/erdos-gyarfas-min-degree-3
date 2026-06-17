@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Project artifacts
+*.cnf
+*.dimacs
+*.log
+experiments/results/*.json
+experiments/results/*.csv
+.DS_Store
+
+# Modal
+.modal/
