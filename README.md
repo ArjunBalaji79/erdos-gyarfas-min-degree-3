@@ -46,6 +46,7 @@ frontier relies on; Carr's (b)/(c) are not needed.
 | 1 | `base ∧ min3` matches `geng -d3` as iso-classes (small n) | `tests/test_base_validation.py` |
 | 3 | **KEY:** at n=10, SAT models == nauty ground truth (`missing = extra = 0`) | `tests/test_cross_check_n10.py` |
 | 4 | bound ≥ 17 reproduced: n=4..16 UNSAT, property-(a) on/off agree | `tests/test_bound_gate.py` |
+| 5 | every forbidden cycle is a valid power-of-2 simple cycle, and a 2nd solver agrees UNSAT | `tests/test_certificate.py` |
 
 **Gate 3 is non-negotiable** — it catches an over-constrained encoding that would
 return UNSAT for the wrong reason. Re-run it whenever the encoding changes:
@@ -53,6 +54,24 @@ return UNSAT for the wrong reason. Re-run it whenever the encoding changes:
 ```bash
 PYTHONPATH=. pytest tests/test_cross_check_n10.py -q
 ```
+
+## How a frontier UNSAT is verified
+
+For large `n` there is no tractable independent ground truth, so each UNSAT is
+made auditable three ways (`erdos_gyarfas/sat/verify.py`):
+
+1. **Lemma certificate** — every refinement clause records the exact cycle it
+   forbids; the verifier re-checks each is a genuine simple cycle of power-of-two
+   length. A real counterexample avoids *all* power-of-two cycles, so it would
+   satisfy the formula — hence UNSAT (over these verified lemmas) means none exists.
+2. **Independent re-check** — the accumulated formula is re-solved from scratch
+   with a different backend (glucose42 vs the primary cadical195); both must
+   report UNSAT, guarding against a single-solver bug.
+3. **Soundness anchor** — Gate 3 proves the *encoding* drops no isomorphism class
+   at n=10, and Gate 4 reproduces the published n≤16 results.
+
+The Modal driver runs all three per size and stores the certificate (gzipped) and
+verdict in a persistent Volume.
 
 ## Layout
 
@@ -133,6 +152,28 @@ prunes non-canonical graphs *during* search rather than blocking them after the
 fact. That is the documented next step to reach the salvage's n=23 (bound ≥ 24).
 (Note: the PyPI package `pysms` is an unrelated SMS-texting library, not this tool.)
 
+## Context & where this sits (literature)
+
+- The conjecture (Erdős–Gyárfás, 1995) is **open**: no counterexample is known;
+  Erdős offered $100 for a proof / $50 for a counterexample.
+- The published **general minimum-degree-3** verification frontier is **n ≥ 17**
+  (all such graphs ≤16 verified), from computer searches by **Gordon Royle and
+  Klas Markström** — and it has not been extended in ~20 years. The **cubic**
+  (3-regular) case is much stronger: **n ≥ 30** (Markström, *Congr. Numer.* 171
+  (2004) 179–192). So the only *new* ground for a general-graph search lies in the
+  **non-cubic** min-degree-3 graphs at 17 ≤ n ≤ 29.
+- **No SAT or SAT-Modulo-Symmetries method has ever been applied to this
+  conjecture** (checked against Szeider's 2025 SMS survey) — so a SAT/CEGAR attack
+  is methodologically new for it.
+- Structural state of the art: A. Carr, *Every Minimal Counterexample to the
+  Erdős–Gyárfás Conjecture is Predominantly Cubic*, arXiv:2605.22844 (2026, preprint)
+  — minimal counterexamples are ≥4/7 degree-3. This subsumes property (a) here.
+
+**Honest novelty:** a verified extension of the **general** frontier past 16,
+using the first SAT method, is a genuine but **narrow** contribution; a compelling
+writeup needs to reach meaningfully beyond n=17 (via complete symmetry breaking)
+and to cite/build on Carr (2026).
+
 ## Notes & honest caveats
 
 - The lower bound is only as sound as the encoding; the gates (especially Gate 3)
@@ -140,6 +181,8 @@ fact. That is the documented next step to reach the salvage's n=23 (bound ≥ 24
   it can only affect speed, not correctness — Gate 3 confirms this.
 - Ladder by 1: the minimality argument behind property (a) needs every smaller
   order verified first.
+- "Verified" here means the three checks above (certificate + independent
+  re-check + Gate 3/4 anchors), not a single formally-checked DRAT proof.
 
 See [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md) for the original
 salvage notes this rebuild is based on.
