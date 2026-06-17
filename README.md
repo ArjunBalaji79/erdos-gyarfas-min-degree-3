@@ -2,11 +2,18 @@
 
 A counterexample-guided (CEGAR) SAT search that verifies the **Erdős–Gyárfás
 conjecture** — every graph with minimum degree ≥ 3 contains a cycle whose length
-is a power of two — for all such graphs up to a frontier order `n`, pushing the
-general lower bound from `n ≥ 17` (Royle / Markström) toward `n ≥ 24`.
+is a power of two — for all such graphs up to a frontier order `n`.
 
 This is a clean rebuild from [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md),
-re-deriving the result from first principles with a full validation-gate suite.
+re-deriving the method from first principles with a full validation-gate suite.
+
+**What this rebuild establishes (honest status):** the method is fully
+reconstructed and **validated** — Gate 3 proves the encoding is sound at n=10
+(`missing = extra = 0`) and Gate 4 reproduces the known `n ≥ 17` baseline. The
+CEGAR frontier runs correctly; with the current *sound but partial* symmetry
+break it reaches roughly **n ≈ 20** within practical time budgets (bound ~≥ 21).
+The salvage notes' headline of `n = 23` (bound ≥ 24) needs *complete* symmetry
+breaking, which is not yet wired in — see **Performance & frontier reach** below.
 
 ## The idea in one paragraph
 
@@ -104,6 +111,28 @@ modal run --detach erdos_gyarfas/experiments/modal_frontier.py::main --start 17 
 modal run erdos_gyarfas/experiments/modal_frontier.py::fetch
 ```
 
+## Performance & frontier reach
+
+The bottleneck to reaching larger `n` is **symmetry breaking**, not solver speed.
+With the current sound-but-partial break (adjacent-transposition lex-leader),
+n=17 takes ~30s and ~85k refinements with cadical195; the salvage notes report
+~10.7k refinements there. That ~8× gap compounds (solve time grows ~4×/step as
+refinement clauses accumulate), so this implementation reaches ~n=20 in practice.
+
+Approaches measured and **ruled out** for closing the gap (so they aren't retried):
+
+| Approach | Outcome |
+|----------|---------|
+| Full-transposition lex-leader | n=17: 57k refs but **net slower** (29→36s) — CNF 3.75× bigger |
+| Dynamic canonicity blocking (pynauty, model-blocking) | **Non-convergent** — exponentially many non-canonical labellings flood the loop |
+| BreakID static preprocessing | Builds & works on pigeonhole, but **detects no symmetry** here — saucy doesn't recognise the Sₙ action on edge-*pairs*, even on a symmetric shadow formula |
+
+**The real fix** is *complete* symmetry breaking via a propagator —
+[SAT-Modulo-Symmetries](https://github.com/markirch/sat-modulo-symmetries) — which
+prunes non-canonical graphs *during* search rather than blocking them after the
+fact. That is the documented next step to reach the salvage's n=23 (bound ≥ 24).
+(Note: the PyPI package `pysms` is an unrelated SMS-texting library, not this tool.)
+
 ## Notes & honest caveats
 
 - The lower bound is only as sound as the encoding; the gates (especially Gate 3)
@@ -111,8 +140,6 @@ modal run erdos_gyarfas/experiments/modal_frontier.py::fetch
   it can only affect speed, not correctness — Gate 3 confirms this.
 - Ladder by 1: the minimality argument behind property (a) needs every smaller
   order verified first.
-- To push past the current reach: stronger symmetry breaking (BreakID) feeding a
-  state-of-the-art CDCL solver (Kissat) on exported DIMACS is the documented path.
 
 See [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md) for the original
 salvage notes this rebuild is based on.
