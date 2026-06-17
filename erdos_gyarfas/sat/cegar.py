@@ -60,7 +60,7 @@ def search(
     use_c4free: bool = False,
     time_budget: Optional[float] = None,
     max_refinements: Optional[int] = None,
-    solver_name: str = "glucose4",
+    solver_name: str = "cadical195",
 ) -> SearchResult:
     """Run CEGAR for a single order n.
 

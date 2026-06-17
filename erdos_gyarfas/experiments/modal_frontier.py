@@ -67,6 +67,7 @@ def solve_n(
     time_budget: float,
     use_property_a: bool = True,
     use_lex: bool = True,
+    solver_name: str = "cadical195",
 ) -> dict:
     """Run CEGAR for a single order n; persist the result to the Volume."""
     import os
@@ -78,6 +79,7 @@ def solve_n(
         use_property_a=use_property_a,
         use_lex=use_lex,
         time_budget=time_budget,
+        solver_name=solver_name,
     )
     rec = {
         "n": r.n,
@@ -133,6 +135,7 @@ def main(
     time_budget: float = DEFAULT_SOFT_BUDGET_S,
     no_property_a: bool = False,
     no_lex: bool = False,
+    solver_name: str = "cadical195",
 ):
     # ---- cost guards, enforced before anything is dispatched ----
     if time_budget + SAFETY_MARGIN_S > HARD_TIMEOUT_S:
@@ -158,7 +161,7 @@ def main(
 
     handles = []
     for n in sizes:
-        fc = solve_n.spawn(n, time_budget, not no_property_a, not no_lex)
+        fc = solve_n.spawn(n, time_budget, not no_property_a, not no_lex, solver_name)
         handles.append((n, fc))
         print(f"  spawned n={n}  call_id={fc.object_id}")
 
