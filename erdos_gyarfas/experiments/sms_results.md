@@ -48,10 +48,11 @@ smsg --vertices n --all-graphs --hide-graphs \
 | 28 | UNSAT  | 1892.0 s   |
 | 29 | UNSAT  | 2342.8 s   |
 | 30 | UNSAT  | 6888.9 s   |
-| 31 | (running) | —       |
+| 31 | not run | (stopped) |
 
 **Verified contiguous UNSAT through n = 30 ⟹ bound ≥ 31.** (UNSAT = "count = 0" = no
-min-degree-3 graph on n vertices avoids all power-of-two cycles.) n = 31 in progress.
+min-degree-3 graph on n vertices avoids all power-of-two cycles.) n = 31 was stopped
+manually — the bound ≥ 31 already surpasses both published frontiers.
 
 ## Comparison to the literature
 
