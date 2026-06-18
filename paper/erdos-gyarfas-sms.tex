@@ -1,0 +1,264 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{proposition}{Proposition}
+
+\newcommand{\degmin}{\delta}
+
+\title{A SAT-Modulo-Symmetries verification of the Erd\H{o}s--Gy\'arf\'as
+power-of-two cycle conjecture for minimum-degree-3 graphs up to 30 vertices}
+
+\author{Arjun Balaji\thanks{Draft. Author/affiliation to be finalized.
+This is a fresh computational result that has not yet been independently
+reproduced or peer-reviewed; see \S\ref{sec:verification} and
+\S\ref{sec:limitations}.}}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The Erd\H{o}s--Gy\'arf\'as conjecture (1995) asserts that every graph with
+minimum degree at least $3$ contains a cycle whose length is a power of two.
+The conjecture is open; prior computer search established that any counterexample
+on the \emph{general} minimum-degree-3 class has at least $17$ vertices
+(Royle and Markstr\"om), and that any \emph{cubic} (3-regular) counterexample has
+at least $30$ vertices (Markstr\"om, 2004). We give, to our knowledge, the first
+application of SAT-based methods to this conjecture. Using SAT Modulo Symmetries
+(SMS) with the Glasgow subgraph solver as a complete forbidden-subgraph
+propagator, we verify that \emph{every} minimum-degree-3 graph on at most $30$
+vertices contains a cycle of length $4$, $8$, or $16$. Consequently any general
+minimum-degree-3 counterexample must have at least $31$ vertices, improving the
+two-decade-old general bound from $17$ to $31$; since the cubic class is a
+subclass, this also improves the cubic bound from $30$ to $31$. We corroborate the
+result with an independent ground-truth check at $n=10$, reproduction of the
+$n\le 16$ baseline, agreement with an independent CEGAR-SAT solver for
+$n \le 19$, robustness to two cardinality encodings and a second symmetry-breaking
+method, and positive controls; we discuss the path to a formally machine-checked
+proof certificate.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+In 1995 Erd\H{o}s and Gy\'arf\'as posed the following conjecture (see
+Erd\H{o}s~\cite{erdos1997}).
+
+\begin{conjecture}[Erd\H{o}s--Gy\'arf\'as]
+\label{conj:eg}
+Every graph with minimum degree at least $3$ contains a simple cycle whose
+length is a power of two.
+\end{conjecture}
+
+Here ``power of two'' means $2^k$ for some integer $k \ge 2$, i.e.\ a cycle of
+length $4, 8, 16, \dots$. The conjecture remains open; Erd\H{o}s offered \$100 for
+a proof and \$50 for a counterexample~\cite{erdos-problems}. It has been confirmed
+for several restricted classes, including 3-connected cubic planar
+graphs~\cite{heckman-krakovski}, $P_8$-free graphs~\cite{gao-shan}, and $P_{10}$-free
+graphs~\cite{cui-disc-math}; the most recent structural progress shows that any
+\emph{minimal} counterexample is ``predominantly cubic''~\cite{carr2026}.
+
+On the computational side, two distinct frontiers are known, and the distinction
+is central to the present paper. Write $\degmin(G)$ for the minimum degree of $G$.
+\begin{itemize}
+  \item \textbf{General} ($\degmin \ge 3$, arbitrary maximum degree): computer
+  searches of Royle and Markstr\"om established that any counterexample has at
+  least $17$ vertices, i.e.\ Conjecture~\ref{conj:eg} holds for all
+  $\degmin\ge 3$ graphs on at most $16$ vertices~\cite{wikipedia-eg,markstrom2004}.
+  \item \textbf{Cubic} (3-regular): Markstr\"om~\cite{markstrom2004} showed that
+  any cubic counterexample has at least $30$ vertices (all cubic graphs on at most
+  $29$ vertices were checked).
+\end{itemize}
+To our knowledge these bounds have not been improved since 2004
+[\textsc{to be confirmed by literature review}].
+
+\paragraph{Contribution.}
+We give the first SAT-based attack on Conjecture~\ref{conj:eg}. Using SAT Modulo
+Symmetries (SMS)~\cite{sms-tocl,sms-survey} together with the Glasgow subgraph
+solver~\cite{glasgow}, we verify Conjecture~\ref{conj:eg} for \emph{all}
+minimum-degree-3 graphs on $n$ vertices for every $n$ up to $30$:
+
+\begin{theorem}
+\label{thm:main}
+Every graph with minimum degree at least $3$ on at most $30$ vertices contains a
+cycle of length $4$, $8$, or $16$. Consequently, any minimum-degree-3
+counterexample to the Erd\H{o}s--Gy\'arf\'as conjecture has at least $31$ vertices.
+\end{theorem}
+
+This improves the general bound from $17$ to $31$. Because the cubic class is
+contained in the minimum-degree-3 class, Theorem~\ref{thm:main} also verifies all
+cubic graphs on at most $30$ vertices, improving the cubic bound from $30$ to
+$31$ as well.
+
+We emphasize what is and is not new. The genuinely new content is the
+\emph{non-cubic} minimum-degree-3 graphs on $17 \le n \le 30$ vertices (the cubic
+subcase on $\le 29$ vertices was already settled in~\cite{markstrom2004}), and the
+methodology (SAT/SMS), which had not previously been applied to this conjecture.
+
+\section{Method}
+\label{sec:method}
+
+For a fixed number of vertices $n$ we decide the following question with a single
+SMS call: \emph{does there exist a graph $G$ on $n$ vertices with $\degmin(G)\ge 3$
+that contains no cycle of length $4$, $8$, or $16$?} If the answer is ``no'' for
+every $n \le 30$, then no minimum-degree-3 counterexample on $\le 30$ vertices
+exists, establishing Theorem~\ref{thm:main}. (For $n \le 30$ the only power-of-two
+cycle lengths that can occur are $4, 8, 16$, since $32 > 30$; thus forbidding
+$C_4, C_8, C_{16}$ as subgraphs is exactly forbidding all power-of-two cycles.)
+
+\paragraph{SAT Modulo Symmetries.} SMS performs complete, isomorph-free
+generation of graphs satisfying given constraints: its modified CaDiCaL solver
+carries an in-search canonicity (minimality) propagator that prunes any partial
+adjacency matrix that cannot be the lexicographically minimal representative of
+its isomorphism class~\cite{sms-tocl}. This is the key to scaling: the search
+considers essentially one graph per isomorphism class rather than enumerating all
+labelings.
+
+\paragraph{Encoding.} The minimum-degree constraint $\degmin(G) \ge 3$ is encoded
+as a CNF cardinality constraint over the $\binom{n}{2}$ edge variables (we use
+SMS's built-in sequential-counter encoding; see \S\ref{sec:verification} for a
+totalizer cross-check). The constraint ``no $C_4$, $C_8$, or $C_{16}$'' is enforced
+by the Glasgow subgraph solver~\cite{glasgow} as a complete forbidden-subgraph
+propagator: whenever a (partial) graph contains one of these cycles as a
+(non-induced) subgraph, the propagator adds a clause excluding it. Forbidding the
+short cycle $C_4$ statically in CNF is cheap, but $C_8$ and $C_{16}$ have
+$\Theta(n^8)$ and $\Theta(n^{16})$ potential occurrences, so a static encoding is
+infeasible; the propagator is what makes the search tractable.
+
+\paragraph{Why not plain CEGAR-SAT.} We also implemented a self-contained
+counterexample-guided (CEGAR) SAT solver in Python (PySAT/CaDiCaL, with a DFS
+power-of-two cycle detector and a lexicographic symmetry break). With only a
+partial symmetry break it re-discovers each bad cycle in many isomorphic copies;
+it reaches $n=19$ (bound $\ge 20$) before the per-instance time grows out of
+reach. SMS's complete symmetry breaking is precisely what removes this bottleneck.
+The two solvers agree on $n \le 19$ (\S\ref{sec:verification}).
+
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:results} reports, for each $n$ from $17$ to $30$, that SMS finds
+\emph{no} minimum-degree-3 graph avoiding all of $C_4, C_8, C_{16}$ (solution count
+$0$). All runs used a single CPU core.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrr}
+\toprule
+$n$ & count & wall time (s) \\
+\midrule
+17 & 0 & 2.9 \\
+18 & 0 & 7.8 \\
+19 & 0 & 24.1 \\
+20 & 0 & 27.8 \\
+21 & 0 & 19.3 \\
+22 & 0 & 101.1 \\
+23 & 0 & 202.9 \\
+24 & 0 & 148.3 \\
+25 & 0 & 339.8 \\
+26 & 0 & 414.8 \\
+27 & 0 & 1000.3 \\
+28 & 0 & 1892.0 \\
+29 & 0 & 2342.8 \\
+30 & 0 & 6888.9 \\
+\bottomrule
+\end{tabular}
+\caption{SMS decision per order $n$: no minimum-degree-3 graph on $n$ vertices
+avoids $C_4, C_8, C_{16}$. Together with the reproduced $n\le16$ baseline this
+proves Theorem~\ref{thm:main}.}
+\label{tab:results}
+\end{table}
+
+\section{Verification}
+\label{sec:verification}
+
+A non-existence claim at $n=30$ cannot be brute-forced (exhaustive generation of
+minimum-degree-3 graphs is infeasible beyond roughly $n=13$), so we corroborate
+Theorem~\ref{thm:main} with several independent checks. \emph{No check produced a
+contradiction.}
+\begin{enumerate}
+  \item \textbf{Ground-truth anchor.} At $n=10$, forbidding only $C_4$, SMS returns
+  exactly $5$ graphs, matching the independent count of the $5$ $C_4$-free
+  minimum-degree-3 graphs on $10$ vertices obtained with \texttt{nauty}
+  (\texttt{geng}+\texttt{labelg})~\cite{nauty}.
+  \item \textbf{Baseline reproduction.} For $n = 6, \dots, 16$, forbidding all of
+  $C_4, C_8, C_{16}$ yields $0$, reproducing the published baseline.
+  \item \textbf{Independent second solver.} Our CEGAR-SAT solver and SMS both
+  return UNSAT for $n = 17, 18, 19$ (different solvers, symmetry breaking, and
+  cycle handling).
+  \item \textbf{Encoding robustness.} Re-deciding with the totalizer cardinality
+  encoding (a structurally different CNF) gives count $0$ at $n = 17, 20, 22, 25$.
+  \item \textbf{Symmetry-method robustness.} Re-deciding with SMS's colex
+  minimality ordering gives count $0$ at $n = 17, 20$; the (slower, experimental)
+  colex variant timed out at $n = 22, 25$ (inconclusive, not contradictory).
+  \item \textbf{Positive controls.} Forbidding only $C_4$ (a weaker constraint)
+  yields a graph at $n = 17, 20, 25, 30$, confirming the pipeline returns a
+  solution when one exists.
+\end{enumerate}
+
+\paragraph{Toward a machine-checked certificate.} \texttt{smsg} can emit an LRAT
+proof for UNSAT instances, but a generic LRAT checker cannot validate it against
+the minimum-degree-3 CNF alone, because the forbidden-cycle clauses are added by
+the propagator during search and are not RUP/RAT-derivable from that CNF (they
+exclude valid minimum-degree-3 graphs). A fully machine-checked certificate
+therefore requires the certified-SMS proof-logging machinery, in which the
+propagator justifies its own clauses; we leave this as the principal next step.
+
+\section{Discussion and limitations}
+\label{sec:limitations}
+
+Theorem~\ref{thm:main} advances the general minimum-degree-3 frontier from $16$ to
+$30$ vertices (bound $17 \to 31$) and, as a byproduct, the cubic frontier from
+$29$ to $30$ (bound $30 \to 31$). We stress two caveats. First, this is a
+\emph{computational} result whose soundness rests on SMS's isomorph-free
+generation, the completeness of the Glasgow subgraph propagator, and the
+correctness of the min-degree encoding; the checks in \S\ref{sec:verification}
+validate this composition at $n=10$ and across $n\le 16$, but a third-party
+independent reproduction and/or a formal proof certificate would be needed for a
+fully rigorous claim. Second, the result does not prove the conjecture; it only
+raises the lower bound on the size of a hypothetical counterexample.
+
+\section*{Reproducibility}
+All code, the per-$n$ data, and the verification scripts are available at
+\url{https://github.com/ArjunBalaji79/erdos-gyarfas-min-degree-3}.
+
+\section*{Acknowledgments}
+The computational pipeline was developed and executed with substantial AI
+assistance; all claims are subject to the independent-reproduction caveat above.
+
+\begin{thebibliography}{99}
+\bibitem{erdos1997} P.~Erd\H{o}s, \emph{Some old and new problems in various
+branches of combinatorics}, Discrete Math.\ 165/166 (1997) 227--231.
+\bibitem{erdos-problems} T.~Bloom et al., Erd\H{o}s Problems,
+\url{https://www.erdosproblems.com/}. [verify exact entry]
+\bibitem{markstrom2004} K.~Markstr\"om, \emph{Extremal graphs for some problems on
+cycles in graphs}, Congressus Numerantium 171 (2004) 179--192.
+\bibitem{heckman-krakovski} C.~C.~Heckman, R.~Krakovski, \emph{Erd\H{o}s--Gy\'arf\'as
+conjecture for cubic planar graphs}, Electron.\ J.\ Combin.\ 20(2) (2013) \#P7.
+\bibitem{gao-shan} [Gao--Shan], \emph{$P_8$-free graphs}, Graphs Combin.\ (2022),
+DOI 10.1007/s00373-022-02578-9. [verify authors/title]
+\bibitem{cui-disc-math} [Cui et al.], \emph{$P_{10}$-free graphs}, Discrete Math.\
+(2024), DOI 10.1016/j.disc.2024.114175, arXiv:2308.05675. [verify authors/title]
+\bibitem{carr2026} A.~Carr, \emph{Every Minimal Counterexample to the
+Erd\H{o}s--Gy\'arf\'as Conjecture is Predominantly Cubic}, arXiv:2605.22844 (2026).
+[preprint, unrefereed]
+\bibitem{sms-tocl} M.~Kirchweger, S.~Szeider, \emph{SAT Modulo Symmetries for
+graph generation}, ACM Trans.\ Comput.\ Logic 25(3) (2024). [verify]
+\bibitem{sms-survey} S.~Szeider, \emph{SAT Modulo Symmetries} (survey), 2025.
+[verify venue]
+\bibitem{glasgow} C.~McCreesh, P.~Prosser, J.~Trimble, \emph{The Glasgow Subgraph
+Solver}, in: Graph Transformation (ICGT), 2020. [verify]
+\bibitem{nauty} B.~D.~McKay, A.~Piperno, \emph{Practical graph isomorphism, II},
+J.\ Symbolic Comput.\ 60 (2014) 94--112.
+\bibitem{wikipedia-eg} Wikipedia, \emph{Erd\H{o}s--Gy\'arf\'as conjecture}.
+[secondary; replace with primary sources]
+\end{thebibliography}
+
+\end{document}
