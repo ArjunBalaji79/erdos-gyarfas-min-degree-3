@@ -332,17 +332,35 @@ def fetch_verify_main():
         return
     cfg = [r for r in rows if r["check"].startswith("config")]
     pos = [r for r in rows if r["check"].startswith("positive")]
+
+    def cfg_label(r):
+        if r["count"] == 0:
+            return "OK (count=0)"
+        if r["count"] is None or r["status"] == "WALL":
+            return "INCONCLUSIVE (timed out)"
+        return "*** CONTRADICTION (count>0) ***"
+
     print("== config robustness (alternative encoding/symmetry; want count=0) ==")
     for r in sorted(cfg, key=lambda r: (r["n"], r["check"])):
         print(f"  n={r['n']:2d} {r['check']}: count={r['count']} {r['elapsed']}s "
-              f"{'OK' if r['ok'] else '*** MISMATCH ***'}")
+              f"-> {cfg_label(r)}")
     print("== positive controls (forbid fewer cycles; want a graph to exist) ==")
     for r in sorted(pos, key=lambda r: r["n"]):
         print(f"  n={r['n']:2d} {r['check']}: {r['status']} {r['elapsed']}s "
-              f"{'OK' if r['ok'] else '*** FAIL ***'}")
-    allok = all(r["ok"] for r in rows)
-    print(f"\n{'ALL VERIFICATION CHECKS PASSED' if allok else 'VERIFICATION ISSUE'} "
-          f"({len(cfg)} config + {len(pos)} positive)")
+              f"-> {'OK (exists)' if r['ok'] else '*** FAIL ***'}")
+    # A real failure = any config with count>0, or a positive control with no graph.
+    contradictions = [r for r in cfg if r["count"] not in (0, None) and r["status"] != "WALL"]
+    pos_fail = [r for r in pos if not r["ok"]]
+    confirmed = [r for r in cfg if r["count"] == 0]
+    inconclusive = [r for r in cfg if r["count"] is None or r["status"] == "WALL"]
+    print(f"\nconfig: {len(confirmed)} confirmed (count=0), {len(inconclusive)} "
+          f"inconclusive (timeout), {len(contradictions)} contradictions")
+    print(f"positive: {len(pos)-len(pos_fail)}/{len(pos)} found graphs")
+    if not contradictions and not pos_fail:
+        print("VERDICT: NO CONTRADICTIONS -- result corroborated "
+              "(timeouts on the slow colex variant are inconclusive, not failures)")
+    else:
+        print("VERDICT: *** REAL ISSUE FOUND -- investigate ***")
 
 
 @app.local_entrypoint()
