@@ -17,12 +17,13 @@ had stood at **N ≥ 17** (Royle & Markström, ~2004) for two decades:
   independently re-proven by a second solver and certified cycle-by-cycle ⟹
   **bound ≥ 20**. ([`experiments/results.md`](erdos_gyarfas/experiments/results.md))
 - **SAT-Modulo-Symmetries** (Kirchweger–Szeider, with the Glasgow subgraph solver;
-  complete symmetry breaking): verified n ≤ 28 ⟹ **bound ≥ 29**, the first SAT/SMS
+  complete symmetry breaking): verified n ≤ 30 ⟹ **bound ≥ 31**, the first SAT/SMS
   attack on this conjecture. ([`experiments/sms_results.md`](erdos_gyarfas/experiments/sms_results.md))
 
-These advance the **general** (non-regular-allowed) frontier from 16 to 28; they do
-**not** surpass Markström's separate **cubic** (3-regular) bound of 30. Soundness is
-anchored against nauty ground truth at n=10 and the published baseline at n≤16.
+This advances the **general** (non-regular-allowed) frontier from 16 to 30 (bound ≥17 →
+≥31); and since general ⊇ cubic, verifying all min-degree-3 graphs on ≤30 vertices also
+surpasses Markström's separate **cubic** (3-regular) bound of 30. Soundness is anchored
+against nauty ground truth at n=10 and the published baseline at n≤16. (n=31 still running.)
 
 ## The idea in one paragraph
 
