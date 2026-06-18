@@ -70,15 +70,19 @@ On the computational side, two distinct frontiers are known, and the distinction
 is central to the present paper. Write $\degmin(G)$ for the minimum degree of $G$.
 \begin{itemize}
   \item \textbf{General} ($\degmin \ge 3$, arbitrary maximum degree): computer
-  searches of Royle and Markstr\"om established that any counterexample has at
-  least $17$ vertices, i.e.\ Conjecture~\ref{conj:eg} holds for all
-  $\degmin\ge 3$ graphs on at most $16$ vertices~\cite{wikipedia-eg,markstrom2004}.
-  \item \textbf{Cubic} (3-regular): Markstr\"om~\cite{markstrom2004} showed that
-  any cubic counterexample has at least $30$ vertices (all cubic graphs on at most
-  $29$ vertices were checked).
+  searches of Royle and Markstr\"om are commonly cited as establishing that any
+  counterexample has at least $17$ vertices, i.e.\ Conjecture~\ref{conj:eg} holds
+  for all $\degmin\ge 3$ graphs on at most $16$ vertices~\cite{wikipedia-eg}.
+  \item \textbf{Cubic} (3-regular): Markstr\"om~\cite{markstrom2004} verified all
+  cubic graphs on at most $29$ vertices, so any cubic counterexample has at least
+  $30$ vertices.
 \end{itemize}
-To our knowledge these bounds have not been improved since 2004
-[\textsc{to be confirmed by literature review}].
+A targeted, adversarial literature search (covering theses, technical reports,
+OEIS and House of Graphs, and the two most recent surveys of computer-assisted
+graph theory and of SAT Modulo Symmetries~\cite{szeider-survey,jooken-survey})
+found no improvement of the \emph{general} bound past $17$ after 2004, and no prior
+application of SAT, SAT Modulo Symmetries, constraint programming, or isomorph-free
+generation to Conjecture~\ref{conj:eg}.
 
 \paragraph{Contribution.}
 We give the first SAT-based attack on Conjecture~\ref{conj:eg}. Using SAT Modulo
@@ -93,15 +97,35 @@ cycle of length $4$, $8$, or $16$. Consequently, any minimum-degree-3
 counterexample to the Erd\H{o}s--Gy\'arf\'as conjecture has at least $31$ vertices.
 \end{theorem}
 
-This improves the general bound from $17$ to $31$. Because the cubic class is
-contained in the minimum-degree-3 class, Theorem~\ref{thm:main} also verifies all
-cubic graphs on at most $30$ vertices, improving the cubic bound from $30$ to
-$31$ as well.
+This improves the general bound from $17$ to $31$, a $+14$-vertex extension over a
+search space that --- unlike the cubic case --- includes all non-regular graphs of
+minimum degree $3$.
 
-We emphasize what is and is not new. The genuinely new content is the
-\emph{non-cubic} minimum-degree-3 graphs on $17 \le n \le 30$ vertices (the cubic
-subcase on $\le 29$ vertices was already settled in~\cite{markstrom2004}), and the
+\paragraph{General versus cubic (a point to read carefully).} Our verified order,
+$30$, coincides numerically with Markstr\"om's cubic \emph{bound} of $30$, but the
+two statements are different and should not be conflated. Markstr\"om verified the
+\emph{cubic} class up to order $29$ (cubic bound $\ge 30$). We verify the
+\emph{entire} minimum-degree-3 class --- a strictly larger family, dominated by
+non-regular graphs --- up to order $30$ (general bound $\ge 31$). Since the cubic
+class is contained in the minimum-degree-3 class, our search in particular
+verifies all cubic graphs on $\le 30$ vertices, which incidentally also improves
+the cubic bound from $30$ to $31$. Thus the genuinely new content is twofold: the
+\emph{non-cubic} minimum-degree-3 graphs on $17 \le n \le 30$ vertices, and the
 methodology (SAT/SMS), which had not previously been applied to this conjecture.
+
+\paragraph{Related work.} The conjecture is known for several restricted classes:
+$K_{1,m}$-free graphs~\cite{shauger}, planar claw-free graphs~\cite{daniel-shauger},
+3-connected cubic planar graphs~\cite{heckman-krakovski}, and the $P_t$-free
+families $P_8$~\cite{gao-shan}, $P_{10}$~\cite{hu-shen}, and (with the aid of a
+computer search) $P_{13}$~\cite{hegde2024}. These are theorems for infinite
+hereditary classes and do not bound the order of a general counterexample. The
+most recent structural progress, Carr~\cite{carr2026}, shows that at least $4/7$ of
+the vertices of any minimal counterexample have degree exactly $3$; it is an
+arXiv preprint that uses no computation. Our methodological ingredients --- SAT
+Modulo Symmetries~\cite{sms-tocl,szeider-survey} and the Glasgow subgraph
+solver~\cite{glasgow} --- have been applied to other graph-existence questions
+(e.g.\ the 3-Decomposition Conjecture on cubic graphs), but, as noted above, not
+to Conjecture~\ref{conj:eg}.
 
 \section{Method}
 \label{sec:method}
@@ -233,32 +257,48 @@ All code, the per-$n$ data, and the verification scripts are available at
 The computational pipeline was developed and executed with substantial AI
 assistance; all claims are subject to the independent-reproduction caveat above.
 
+% NOTE: entries marked [verify] need a final check against the primary source
+% (author initials / exact title / page span) before submission.
 \begin{thebibliography}{99}
 \bibitem{erdos1997} P.~Erd\H{o}s, \emph{Some old and new problems in various
 branches of combinatorics}, Discrete Math.\ 165/166 (1997) 227--231.
-\bibitem{erdos-problems} T.~Bloom et al., Erd\H{o}s Problems,
-\url{https://www.erdosproblems.com/}. [verify exact entry]
+\bibitem{erdos-problems} Erd\H{o}s Problems, ``Power-of-two cycles'',
+\url{https://www.erdosproblems.com/}.
 \bibitem{markstrom2004} K.~Markstr\"om, \emph{Extremal graphs for some problems on
-cycles in graphs}, Congressus Numerantium 171 (2004) 179--192.
+cycles in graphs}, Congressus Numerantium 171 (2004) 177--188.
 \bibitem{heckman-krakovski} C.~C.~Heckman, R.~Krakovski, \emph{Erd\H{o}s--Gy\'arf\'as
 conjecture for cubic planar graphs}, Electron.\ J.\ Combin.\ 20(2) (2013) \#P7.
-\bibitem{gao-shan} [Gao--Shan], \emph{$P_8$-free graphs}, Graphs Combin.\ (2022),
-DOI 10.1007/s00373-022-02578-9. [verify authors/title]
-\bibitem{cui-disc-math} [Cui et al.], \emph{$P_{10}$-free graphs}, Discrete Math.\
-(2024), DOI 10.1016/j.disc.2024.114175, arXiv:2308.05675. [verify authors/title]
-\bibitem{carr2026} A.~Carr, \emph{Every Minimal Counterexample to the
-Erd\H{o}s--Gy\'arf\'as Conjecture is Predominantly Cubic}, arXiv:2605.22844 (2026).
-[preprint, unrefereed]
+\bibitem{shauger} S.~E.~Shauger, \emph{Results on the Erd\H{o}s--Gy\'arf\'as
+conjecture in $K_{1,m}$-free graphs}, Congressus Numerantium 134 (1998). [verify]
+\bibitem{daniel-shauger} D.~Daniel, S.~E.~Shauger, \emph{A result on the
+Erd\H{o}s--Gy\'arf\'as conjecture in planar graphs}, Congressus Numerantium 153
+(2001). [verify]
+\bibitem{gao-shan} J.~Gao, E.~Shan, \emph{The Erd\H{o}s--Gy\'arf\'as conjecture for
+$P_8$-free graphs}, Graphs Combin.\ 38(6) (2022), DOI 10.1007/s00373-022-02578-9.
+[verify initials]
+\bibitem{hu-shen} [authors], \emph{Power-of-two cycles in $P_{10}$-free graphs},
+Discrete Math.\ (2024), DOI 10.1016/j.disc.2024.114175. [verify authors/title]
+\bibitem{hegde2024} S.~M.~Hegde, R.~B.~Sandeep, S.~Shashank, \emph{The
+Erd\H{o}s--Gy\'arf\'as conjecture for $P_{13}$-free graphs}, arXiv:2410.22842
+(2024). [verify initials]
+\bibitem{carr2026} A.~Carr, \emph{Every minimal counterexample to the
+Erd\H{o}s--Gy\'arf\'as conjecture is predominantly cubic}, arXiv:2605.22844 (2026),
+preprint.
 \bibitem{sms-tocl} M.~Kirchweger, S.~Szeider, \emph{SAT Modulo Symmetries for
-graph generation}, ACM Trans.\ Comput.\ Logic 25(3) (2024). [verify]
-\bibitem{sms-survey} S.~Szeider, \emph{SAT Modulo Symmetries} (survey), 2025.
-[verify venue]
+graph generation and enumeration}, ACM Trans.\ Comput.\ Logic 25(3) (2024),
+DOI 10.1145/3670405. [verify title]
+\bibitem{szeider-survey} S.~Szeider, \emph{SAT Modulo Symmetries: A Survey}, 2025
+(CEUR-WS Vol-4116). [verify]
+\bibitem{jooken-survey} J.~Jooken, \emph{Computer-assisted graph theory: a survey},
+arXiv:2508.20825 (2025). [verify title]
 \bibitem{glasgow} C.~McCreesh, P.~Prosser, J.~Trimble, \emph{The Glasgow Subgraph
-Solver}, in: Graph Transformation (ICGT), 2020. [verify]
+Solver: using constraint programming to tackle hard subgraph isomorphism problem
+variants}, in: Graph Transformation (ICGT 2020), LNCS 12150, 316--324.
 \bibitem{nauty} B.~D.~McKay, A.~Piperno, \emph{Practical graph isomorphism, II},
 J.\ Symbolic Comput.\ 60 (2014) 94--112.
-\bibitem{wikipedia-eg} Wikipedia, \emph{Erd\H{o}s--Gy\'arf\'as conjecture}.
-[secondary; replace with primary sources]
+\bibitem{wikipedia-eg} Wikipedia, \emph{Erd\H{o}s--Gy\'arf\'as conjecture}
+(secondary source for the commonly-cited general $\ge 17$ bound; the primary
+record for the general search is thin and should be confirmed with Royle/Markstr\"om).
 \end{thebibliography}
 
 \end{document}
