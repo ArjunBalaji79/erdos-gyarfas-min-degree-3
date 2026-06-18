@@ -28,7 +28,8 @@ app = modal.App("erdos-gyarfas-sms")
 
 # Build SMS WITH the Glasgow subgraph solver (-s) for the forbidden-subgraph
 # propagator. Local install (-l) into /root/.local avoids sudo.
-sms_image = (
+# Base SMS build (no local source yet, so further build steps can be layered).
+_sms_base = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("git", "cmake", "g++", "make", "libboost-all-dev", "zlib1g-dev",
                  "libgmp-dev")  # GMP/GMPXX required by the Glasgow subgraph solver
@@ -44,6 +45,19 @@ sms_image = (
     .env({"LD_LIBRARY_PATH": "/root/.local/lib:/usr/local/lib",
           "PATH": "/root/.local/bin:/usr/local/bin:/usr/bin:/bin"})
     .pip_install("networkx>=3.0")
+)
+
+sms_image = _sms_base.add_local_python_source("erdos_gyarfas")
+
+# SMS image + an INDEPENDENT LRAT proof checker (drat-trim's lrat-check), which
+# shares no code with SMS -- for verifying smsg's UNSAT proofs. drat-trim is
+# built BEFORE the local source is added (Modal requires add_local_* last).
+lrat_image = (
+    _sms_base
+    .run_commands(
+        "git clone --depth 1 https://github.com/marijnheule/drat-trim /opt/drat-trim",
+        "cd /opt/drat-trim && gcc -O2 lrat-check.c -o /usr/local/bin/lrat-check",
+    )
     .add_local_python_source("erdos_gyarfas")
 )
 
@@ -80,31 +94,49 @@ def _parse_count(stdout: str):
     return None
 
 
-def _run_smsg(n, lengths, time_budget, capture_graphs=False):
+def _run_smsg(n, lengths, time_budget, capture_graphs=False,
+              counter="sequential", extra_args=None, first_only=False,
+              lrat_file=None):
     """One smsg call: min-degree-3 + forbid the given cycle lengths, with SMS
-    symmetry breaking. Returns (count, status, elapsed, stdout_tail)."""
+    symmetry breaking. Returns (count, status, elapsed, stdout_tail).
+
+    ``counter`` selects the cardinality CNF (sequential|totalizer).
+    ``extra_args`` are appended to smsg (e.g. ['--colex-ordering']).
+    ``first_only`` stops at the first solution (existence check, for positive
+    controls). ``lrat_file`` writes a machine-checkable LRAT proof of UNSAT."""
     import subprocess
     import time
 
     from pysms.graph_builder import GraphEncodingBuilder
 
     b = GraphEncodingBuilder(n, directed=False)
-    b.minDegree(3)
-    cnf = f"/tmp/enc_{n}.cnf"
+    b.minDegree(3, countertype=counter)
+    cnf = f"/tmp/enc_{n}_{counter}.cnf"
     with open(cnf, "w") as fh:
         b.print_dimacs(fh)
     cyc = f"/tmp/cyc_{n}.txt"
     _write_cycle_file(cyc, lengths)
 
-    cmd = ["smsg", "--vertices", str(n), "--all-graphs",
-           "--forbidden-subgraph-file", cyc, "--dimacs", cnf]
-    if not capture_graphs:
-        cmd.insert(4, "--hide-graphs")
+    cmd = ["smsg", "--vertices", str(n)]
+    if not first_only:
+        cmd.append("--all-graphs")
+        if not capture_graphs:
+            cmd.append("--hide-graphs")
+    cmd += ["--forbidden-subgraph-file", cyc, "--dimacs", cnf]
+    if lrat_file:
+        cmd += ["--lrat-output", lrat_file]
+    if extra_args:
+        cmd += list(extra_args)
     t = time.monotonic()
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=time_budget)
     except subprocess.TimeoutExpired:
         return None, "WALL", round(time.monotonic() - t, 2), ""
+    elapsed = round(time.monotonic() - t, 2)
+    if first_only:
+        # returncode 10 = a solution was found; 20 = none (UNSAT)
+        exists = (p.returncode == 10)
+        return (1 if exists else 0), ("SAT" if exists else "UNSAT"), elapsed, p.stdout[-1500:]
     count = _parse_count(p.stdout)
     if count is None:
         status = "ERROR"
@@ -112,7 +144,7 @@ def _run_smsg(n, lengths, time_budget, capture_graphs=False):
         status = "UNSAT"        # no min-deg-3 graph avoids all power-of-2 cycles
     else:
         status = "SAT"          # !!! a counterexample would live here
-    return count, status, round(time.monotonic() - t, 2), p.stdout[-1500:]
+    return count, status, elapsed, p.stdout[-1500:]
 
 
 @app.function(image=sms_image, timeout=HARD_TIMEOUT_S, cpu=1.0,
@@ -167,6 +199,150 @@ def validate_main():
         print(f"n={d['n']:2d} forbid={d['lengths']}  count={d['count']} "
               f"(expect {d['expect']})  {d['elapsed']}s  {flag}")
     print("\nALL SOUNDNESS CHECKS PASSED" if ok else "\nSOUNDNESS FAILURE")
+
+
+def _persist_verify(key: str, rec: dict):
+    import json
+    import os
+    os.makedirs(f"{VOL}/verify", exist_ok=True)
+    with open(f"{VOL}/verify/{key}.json", "w") as f:
+        json.dump(rec, f)
+    results_volume.commit()
+
+
+@app.function(image=sms_image, timeout=HARD_TIMEOUT_S, cpu=1.0,
+              volumes={VOL: results_volume})
+def verify_config(n: int, counter: str, colex: bool, time_budget: float = 3300.0) -> dict:
+    """Re-decide n with an alternative cardinality encoding and/or the colex
+    symmetry-breaking variant. Must still give count=0 (robust to config)."""
+    lengths = _powers_of_two_upto(n)
+    extra = ["--colex-ordering"] if colex else None
+    count, status, elapsed, tail = _run_smsg(
+        n, lengths, time_budget, counter=counter, extra_args=extra)
+    rec = {"n": n, "check": f"config(counter={counter},colex={colex})",
+           "count": count, "status": status, "elapsed": elapsed, "expect": 0,
+           "ok": count == 0}
+    _persist_verify(f"config_n{n:02d}_{counter}_colex{int(colex)}", rec)
+    print(f"[verify config n={n} {counter} colex={colex}] count={count} {elapsed}s")
+    return rec
+
+
+@app.function(image=sms_image, timeout=1800, cpu=1.0,
+              volumes={VOL: results_volume})
+def positive_control(n: int, lengths: list, time_budget: float = 1500.0) -> dict:
+    """Forbid FEWER cycle lengths than the full power-of-2 set: a graph MUST
+    exist (e.g. C4-free min-degree-3 graphs do). Confirms the pipeline returns
+    a solution when one exists -- i.e. the frontier '0's are not a broken/empty
+    pipeline always returning UNSAT."""
+    count, status, elapsed, tail = _run_smsg(
+        n, lengths, time_budget, first_only=True)
+    rec = {"n": n, "check": f"positive(forbid={lengths})", "count": count,
+           "status": status, "elapsed": elapsed, "expect": "SAT (exists)",
+           "ok": status == "SAT"}
+    _persist_verify(f"pos_n{n:02d}", rec)
+    print(f"[verify positive n={n} forbid={lengths}] {status} {elapsed}s")
+    return rec
+
+
+@app.function(image=lrat_image, timeout=HARD_TIMEOUT_S, cpu=1.0)
+def lrat_certify(n: int, time_budget: float = 3300.0) -> dict:
+    """Emit an LRAT proof of the n-th UNSAT from smsg, then verify it with an
+    INDEPENDENT checker (drat-trim lrat-check). Returns sizes + checker verdict.
+    This empirically establishes what SMS's LRAT proof certifies for our setup."""
+    import os
+    import subprocess
+
+    lengths = _powers_of_two_upto(n)
+    proof = f"/tmp/proof_{n}.lrat"
+    count, status, elapsed, tail = _run_smsg(
+        n, lengths, time_budget, lrat_file=proof)
+    cnf = f"/tmp/enc_{n}_sequential.cnf"
+    out = {"n": n, "status": status, "count": count, "elapsed": elapsed,
+           "smsg_tail": tail}
+    if status == "UNSAT" and os.path.exists(proof):
+        out["proof_bytes"] = os.path.getsize(proof)
+        out["cnf_bytes"] = os.path.getsize(cnf) if os.path.exists(cnf) else None
+        try:
+            chk = subprocess.run(["lrat-check", cnf, proof],
+                                 capture_output=True, text=True, timeout=3600)
+            out["lrat_check_rc"] = chk.returncode
+            out["lrat_check_tail"] = (chk.stdout + chk.stderr)[-1500:]
+        except subprocess.TimeoutExpired:
+            out["lrat_check_rc"] = "timeout"
+    else:
+        out["note"] = f"no proof emitted (status={status})"
+    return out
+
+
+@app.local_entrypoint()
+def lrat_main(n: int = 16):
+    d = lrat_certify.remote(n)
+    print(f"n={d['n']} status={d['status']} count={d['count']} {d['elapsed']}s")
+    print(f"  proof_bytes={d.get('proof_bytes')} cnf_bytes={d.get('cnf_bytes')}")
+    print(f"  lrat-check rc={d.get('lrat_check_rc')}")
+    print(f"  lrat-check output:\n{d.get('lrat_check_tail', d.get('note'))}")
+
+
+@app.local_entrypoint()
+def verify_main():
+    """Independent hardening of the frontier UNSATs (config robustness +
+    positive controls). The LRAT proof certificates are a separate entrypoint."""
+    jobs = []
+    # (1) config robustness: alternative encodings/symmetry must also give 0
+    for n in [17, 20, 22, 25]:
+        for counter in ["sequential", "totalizer"]:
+            for colex in [False, True]:
+                if counter == "sequential" and not colex:
+                    continue  # that's the original frontier config -- skip
+                jobs.append(("config", verify_config.spawn(n, counter, colex)))
+    # (2) positive controls: forbidding only C4 MUST yield a graph at these n
+    for n in [17, 20, 25, 30]:
+        jobs.append(("pos", positive_control.spawn(n, [4])))
+
+    print(f"== independent verification: {len(jobs)} jobs dispatched ==")
+    print("results persist to Volume; fetch with ::fetch_verify_main")
+    for kind, h in jobs:
+        try:
+            d = h.get()
+            print(f"  [{kind}] n={d['n']} {d['check']}: count={d['count']} "
+                  f"status={d['status']} {d['elapsed']}s ok={d['ok']}")
+        except Exception as e:  # noqa: BLE001
+            print(f"  [{kind}] live result unavailable ({type(e).__name__}); check Volume")
+
+
+@app.function(image=sms_image, volumes={VOL: results_volume})
+def _collect_verify() -> list:
+    import json
+    import os
+    results_volume.reload()
+    d = f"{VOL}/verify"
+    out = []
+    if os.path.isdir(d):
+        for name in sorted(os.listdir(d)):
+            if name.endswith(".json"):
+                out.append(json.load(open(f"{d}/{name}")))
+    return out
+
+
+@app.local_entrypoint()
+def fetch_verify_main():
+    rows = _collect_verify.remote()
+    if not rows:
+        print("no verification results yet")
+        return
+    cfg = [r for r in rows if r["check"].startswith("config")]
+    pos = [r for r in rows if r["check"].startswith("positive")]
+    print("== config robustness (alternative encoding/symmetry; want count=0) ==")
+    for r in sorted(cfg, key=lambda r: (r["n"], r["check"])):
+        print(f"  n={r['n']:2d} {r['check']}: count={r['count']} {r['elapsed']}s "
+              f"{'OK' if r['ok'] else '*** MISMATCH ***'}")
+    print("== positive controls (forbid fewer cycles; want a graph to exist) ==")
+    for r in sorted(pos, key=lambda r: r["n"]):
+        print(f"  n={r['n']:2d} {r['check']}: {r['status']} {r['elapsed']}s "
+              f"{'OK' if r['ok'] else '*** FAIL ***'}")
+    allok = all(r["ok"] for r in rows)
+    print(f"\n{'ALL VERIFICATION CHECKS PASSED' if allok else 'VERIFICATION ISSUE'} "
+          f"({len(cfg)} config + {len(pos)} positive)")
 
 
 @app.local_entrypoint()
