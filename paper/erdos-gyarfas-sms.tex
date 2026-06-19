@@ -120,7 +120,10 @@ $K_{1,m}$-free graphs~\cite{shauger}, planar claw-free graphs~\cite{daniel-shaug
 3-connected cubic planar graphs~\cite{heckman-krakovski}, and the $P_t$-free
 families $P_8$~\cite{gao-shan}, $P_{10}$~\cite{hu-shen}, and (with the aid of a
 computer search) $P_{13}$~\cite{hegde2024}. These are theorems for infinite
-hereditary classes and do not bound the order of a general counterexample. The
+hereditary classes and do not bound the order of a general counterexample; in
+particular, the computer search of~\cite{hegde2024} assists a structural proof for
+the $P_{13}$-free class and is unrelated to the exhaustive, isomorph-free
+SAT enumeration used here. The
 most recent structural progress, Carr~\cite{carr2026}, shows that at least $4/7$ of
 the vertices of any minimal counterexample have degree exactly $3$; it is an
 arXiv preprint that uses no computation. Our methodological ingredients --- SAT
@@ -134,11 +137,29 @@ to Conjecture~\ref{conj:eg}.
 
 For a fixed number of vertices $n$ we decide the following question with a single
 SMS call: \emph{does there exist a graph $G$ on $n$ vertices with $\degmin(G)\ge 3$
-that contains no cycle of length $4$, $8$, or $16$?} If the answer is ``no'' for
-every $n \le 30$, then no minimum-degree-3 counterexample on $\le 30$ vertices
-exists, establishing Theorem~\ref{thm:main}. (For $n \le 30$ the only power-of-two
-cycle lengths that can occur are $4, 8, 16$, since $32 > 30$; thus forbidding
-$C_4, C_8, C_{16}$ as subgraphs is exactly forbidding all power-of-two cycles.)
+that contains no cycle of length $4$, $8$, or $16$?} The reduction to these three
+cycle lengths is justified by the following elementary observation.
+
+\begin{proposition}
+\label{prop:reduction}
+For $3 \le n \le 31$, a graph on $n$ vertices contains a cycle whose length is a
+power of two if and only if it contains $C_4$, $C_8$, or $C_{16}$ as a
+(non-induced) subgraph.
+\end{proposition}
+\begin{proof}
+A cycle of length $\ell$ is precisely a $C_\ell$ subgraph. The powers of two that
+are valid cycle lengths (at least $3$) and at most $n \le 31$ are exactly $4, 8,
+16$; the next one, $32$, exceeds $n$.
+\end{proof}
+
+By Proposition~\ref{prop:reduction}, if for every $n \le 30$ no minimum-degree-3
+graph on $n$ vertices contains $C_4$, $C_8$, or $C_{16}$ is found, then no
+minimum-degree-3 counterexample on at most $30$ vertices exists. A minimum-degree-3
+graph requires $n \ge 4$, and for $n \le 16$ the conjecture is the established
+baseline, which we reproduce ($\S\ref{sec:verification}$; the smallest orders $n=4,5$
+are also covered by the independent CEGAR check below and trivially --- $K_4$
+contains $C_4$). It therefore suffices to settle $17 \le n \le 30$, which is the
+content of Theorem~\ref{thm:main}.
 
 \paragraph{SAT Modulo Symmetries.} SMS performs complete, isomorph-free
 generation of graphs satisfying given constraints: its modified CaDiCaL solver
