@@ -3,6 +3,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{hyperref}
 \usepackage{url}
 
@@ -203,6 +205,28 @@ proves Theorem~\ref{thm:main}.}
 \label{tab:results}
 \end{table}
 
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[
+  width=0.82\linewidth, height=5.6cm,
+  xlabel={order $n$}, ylabel={wall time (s)},
+  xtick={17,19,21,23,25,27,29}, ymin=1, ymax=15000,
+  grid=both, mark size=1.4pt,
+]
+\addplot[mark=*] coordinates {
+(17,2.9)(18,7.8)(19,24.1)(20,27.8)(21,19.3)(22,101.1)(23,202.9)(24,148.3)
+(25,339.8)(26,414.8)(27,1000.3)(28,1892.0)(29,2342.8)(30,6888.9)
+};
+\end{semilogyaxis}
+\end{tikzpicture}
+\caption{Single-core wall time of the SMS decision at each order $n$ (log scale).
+Every point is UNSAT (no minimum-degree-3 graph on $n$ vertices avoids
+$C_4, C_8, C_{16}$). Growth is roughly geometric, about a factor of $1.5$--$2$ per
+added vertex.}
+\label{fig:runtime}
+\end{figure}
+
 \paragraph{Experimental setup.} For each $n$, the minimum-degree-3 CNF is generated
 by PySMS's \texttt{GraphEncodingBuilder($n$).minDegree(3)}, and the search is run by
 \texttt{smsg} with the invocation
@@ -269,6 +293,34 @@ validate this composition at $n=10$ and across $n\le 16$, but a third-party
 independent reproduction and/or a formal proof certificate would be needed for a
 fully rigorous claim. Second, the result does not prove the conjecture; it only
 raises the lower bound on the size of a hypothetical counterexample.
+
+\section{Conclusion and future work}
+\label{sec:conclusion}
+
+We have given the first SAT-based attack on the Erd\H{o}s--Gy\'arf\'as conjecture.
+Casting the question as ``does a minimum-degree-3 graph with no $C_4$, $C_8$, or
+$C_{16}$ exist?'' and discharging it with SAT Modulo Symmetries and the Glasgow
+subgraph propagator, we verified the conjecture for all minimum-degree-3 graphs on
+at most $30$ vertices, raising the general lower bound on a counterexample from
+$17$ to $31$ (Theorem~\ref{thm:main}). The decisive ingredient is complete,
+in-search symmetry breaking: a conventional CEGAR encoding stalls near $n=20$,
+whereas SMS reaches $n=30$ in under two hours of single-core time.
+
+Several directions remain. (i) \emph{Push the frontier.} The runtimes
+(Figure~\ref{fig:runtime}) suggest $n=31$ and a few further orders are within reach
+of a longer single run or modest parallelism; the present search was halted at
+$n=30$. (ii) \emph{A machine-checked certificate.} Replacing the verification
+checks of \S\ref{sec:verification} by an end-to-end, formally verified proof --- via
+the certified-SMS proof-logging machinery, so that the forbidden-subgraph and
+canonicity propagators justify their own clauses --- would put the result on the
+same footing as certified SAT resolutions of, e.g., the Pythagorean triples and
+Schur-number problems. (iii) \emph{Exploit structure.} Carr's result that a minimal
+counterexample is predominantly cubic~\cite{carr2026} could be added as a
+propagator to prune the search and reach larger $n$. (iv) \emph{Other questions.}
+The same SMS-plus-forbidden-subgraph template applies directly to related
+cycle-spectrum problems. Most importantly, an independent third-party reproduction
+would close the remaining gap between a corroborated computation and an established
+result.
 
 \section*{Reproducibility}
 All code, the per-$n$ data, and the verification scripts are available at
