@@ -33,6 +33,12 @@ _sms_base = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("git", "cmake", "g++", "make", "libboost-all-dev", "zlib1g-dev",
                  "libgmp-dev")  # GMP/GMPXX required by the Glasgow subgraph solver
+    # Exact versions used for the published frontier (record for reproducibility;
+    # see paper/erdos-gyarfas-sms.tex). To reproduce exactly, add `git checkout`
+    # of these commits before building:
+    #   SMS      464f12f1fd36b496e7ba9dcbb622b079de02dce4  (v2.0.0-3-g464f12f)
+    #   Glasgow  abd331a7ef57c83961323f0e24f95ace04d6e9bf
+    #   CaDiCaL  rel-2.1.2-38-gb023aaf  (SMS submodule)
     .run_commands(
         "git clone --recursive https://github.com/markirch/sat-modulo-symmetries /opt/sms",
         "cd /opt/sms && git submodule update --init --recursive",
@@ -225,6 +231,35 @@ def verify_config(n: int, counter: str, colex: bool, time_budget: float = 3300.0
     _persist_verify(f"config_n{n:02d}_{counter}_colex{int(colex)}", rec)
     print(f"[verify config n={n} {counter} colex={colex}] count={count} {elapsed}s")
     return rec
+
+
+@app.function(image=sms_image, timeout=300, cpu=1.0)
+def versions() -> dict:
+    """Record exact tool versions/commits for reproducibility in the paper."""
+    import subprocess
+
+    def sh(cmd):
+        try:
+            return subprocess.run(cmd, shell=True, capture_output=True,
+                                  text=True, timeout=60).stdout.strip()
+        except Exception as e:  # noqa: BLE001
+            return f"<err {type(e).__name__}>"
+
+    return {
+        "sms_commit": sh("cd /opt/sms && git rev-parse HEAD"),
+        "sms_describe": sh("cd /opt/sms && git describe --tags --always 2>/dev/null"),
+        "glasgow_commit": sh("cd /opt/sms/glasgow-subgraph-solver && git rev-parse HEAD"),
+        "cadical_describe": sh("cd /opt/sms/cadical_sms && git describe --tags --always 2>/dev/null"),
+        "smsg_help_head": sh("smsg --help 2>&1 | head -2"),
+        "gpp": sh("g++ --version | head -1"),
+        "python": sh("python --version"),
+    }
+
+
+@app.local_entrypoint()
+def versions_main():
+    import json
+    print(json.dumps(versions.remote(), indent=2))
 
 
 @app.function(image=sms_image, timeout=1800, cpu=1.0,

@@ -157,13 +157,16 @@ short cycle $C_4$ statically in CNF is cheap, but $C_8$ and $C_{16}$ have
 $\Theta(n^8)$ and $\Theta(n^{16})$ potential occurrences, so a static encoding is
 infeasible; the propagator is what makes the search tractable.
 
-\paragraph{Why not plain CEGAR-SAT.} We also implemented a self-contained
-counterexample-guided (CEGAR) SAT solver in Python (PySAT/CaDiCaL, with a DFS
-power-of-two cycle detector and a lexicographic symmetry break). With only a
-partial symmetry break it re-discovers each bad cycle in many isomorphic copies;
-it reaches $n=19$ (bound $\ge 20$) before the per-instance time grows out of
-reach. SMS's complete symmetry breaking is precisely what removes this bottleneck.
-The two solvers agree on $n \le 19$ (\S\ref{sec:verification}).
+\paragraph{Why not plain CEGAR-SAT.} As a baseline we also implemented a
+self-contained counterexample-guided (CEGAR) SAT solver in Python (PySAT with
+CaDiCaL, a DFS power-of-two cycle detector, and a static adjacent-transposition
+lexicographic symmetry break). With only a partial symmetry break it re-discovers
+each forbidden cycle in many isomorphic copies: at $n=17$ it accumulates roughly
+$85{,}000$ refinement clauses and the per-instance time grows by about a factor of
+two per vertex, so it stalls at $n=19$ (bound $\ge 20$). SMS decides the same
+$n=17$ instance in $2.9$ seconds (Table~\ref{tab:results}). Complete symmetry
+breaking is precisely what removes this bottleneck; the two solvers agree wherever
+both finish ($n \le 19$, \S\ref{sec:verification}).
 
 \section{Results}
 \label{sec:results}
@@ -199,6 +202,24 @@ avoids $C_4, C_8, C_{16}$. Together with the reproduced $n\le16$ baseline this
 proves Theorem~\ref{thm:main}.}
 \label{tab:results}
 \end{table}
+
+\paragraph{Experimental setup.} For each $n$, the minimum-degree-3 CNF is generated
+by PySMS's \texttt{GraphEncodingBuilder($n$).minDegree(3)}, and the search is run by
+\texttt{smsg} with the invocation
+\begin{center}\small
+\texttt{smsg --vertices $n$ --all-graphs --hide-graphs
+--forbidden-subgraph-file CYC --dimacs ENC}
+\end{center}
+where \texttt{CYC} lists $C_4, C_8, C_{16}$ (one per line, as
+$\langle k\rangle\ v_0\ v_1\ v_1\ v_2\ \cdots$) and \texttt{ENC} is the generated
+DIMACS file. We use SMS (\url{github.com/markirch/sat-modulo-symmetries}, version
+\texttt{v2.0.0-3-g464f12f}, commit \texttt{464f12f}) built with the Glasgow Subgraph
+Solver (commit \texttt{abd331a}) and the SMS-bundled CaDiCaL (\texttt{rel-2.1.2-38})
+compiled with \texttt{g++ 12.2.0}. Each order ran on a single CPU core (a Modal
+\texttt{debian\_slim}, Python 3.12.6 container). Wall times in Table~\ref{tab:results}
+exclude container start-up. The complete build and run scripts are in the
+accompanying repository; we recommend pinning the three commits above when
+reproducing.
 
 \section{Verification}
 \label{sec:verification}
