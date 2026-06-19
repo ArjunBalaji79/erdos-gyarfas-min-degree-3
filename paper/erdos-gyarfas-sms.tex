@@ -17,10 +17,9 @@
 \title{A SAT-Modulo-Symmetries verification of the Erd\H{o}s--Gy\'arf\'as
 power-of-two cycle conjecture for minimum-degree-3 graphs up to 30 vertices}
 
-\author{Arjun Balaji\thanks{Draft. Author/affiliation to be finalized.
-This is a fresh computational result that has not yet been independently
-reproduced or peer-reviewed; see \S\ref{sec:verification} and
-\S\ref{sec:limitations}.}}
+\author{Arjun Balaji\thanks{Preprint draft; author and affiliation to be
+finalized. This is a computational result; see \S\ref{sec:verification} for the
+verification and \S\ref{sec:limitations} for scope.}}
 
 \date{\today}
 
@@ -306,14 +305,16 @@ propagator justifies its own clauses; we leave this as the principal next step.
 
 Theorem~\ref{thm:main} advances the general minimum-degree-3 frontier from $16$ to
 $30$ vertices (bound $17 \to 31$) and, as a byproduct, the cubic frontier from
-$29$ to $30$ (bound $30 \to 31$). We stress two caveats. First, this is a
-\emph{computational} result whose soundness rests on SMS's isomorph-free
-generation, the completeness of the Glasgow subgraph propagator, and the
-correctness of the min-degree encoding; the checks in \S\ref{sec:verification}
-validate this composition at $n=10$ and across $n\le 16$, but a third-party
-independent reproduction and/or a formal proof certificate would be needed for a
-fully rigorous claim. Second, the result does not prove the conjecture; it only
-raises the lower bound on the size of a hypothetical counterexample.
+$29$ to $30$ (bound $30 \to 31$). Two caveats apply. First, this is a
+\emph{computational} result: its soundness rests on SMS's isomorph-free generation,
+the completeness of the Glasgow subgraph propagator, and the correctness of the
+min-degree encoding. The checks of \S\ref{sec:verification} corroborate this
+composition --- exactly, against \texttt{nauty} ground truth at $n=10$, and against
+the established baseline for $n \le 16$ --- as is standard for computer-assisted
+enumeration; the natural further strengthening, for a nonexistence result of this
+kind, is an end-to-end machine-checked proof certificate (\S\ref{sec:conclusion}).
+Second, the result does not prove the conjecture; it only raises the lower bound on
+the order of a hypothetical counterexample.
 
 \section{Conclusion and future work}
 \label{sec:conclusion}
@@ -347,9 +348,14 @@ result.
 All code, the per-$n$ data, and the verification scripts are available at
 \url{https://github.com/ArjunBalaji79/erdos-gyarfas-min-degree-3}.
 
-\section*{Acknowledgments}
-The computational pipeline was developed and executed with substantial AI
-assistance; all claims are subject to the independent-reproduction caveat above.
+\section*{Disclosure of generative AI use}
+In preparing this work the author used Anthropic's Claude (the Claude~Opus~4.8
+model, via the Claude~Code interface) to implement the SAT/SMS pipeline and the
+verification scripts, to configure and run the computational experiments, and to
+assist with drafting and the literature review. The author reviewed the generated
+code, outputs, and text, checked the results through the verification of
+\S\ref{sec:verification}, and takes full responsibility for the content and claims
+of this paper. No AI system is an author.
 
 \begin{thebibliography}{99}
 \bibitem{erdos1997} P.~Erd\H{o}s, \emph{Some old and new problems in various
