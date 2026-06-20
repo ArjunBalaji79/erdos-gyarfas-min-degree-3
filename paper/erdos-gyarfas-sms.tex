@@ -6,7 +6,9 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{hyperref}
-\usepackage{url}
+\usepackage{xurl}
+\usepackage{microtype}
+\emergencystretch=3em
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{conjecture}{Conjecture}
@@ -46,6 +48,15 @@ $n \le 19$, robustness to two cardinality encodings and a second symmetry-breaki
 method, and positive controls; we discuss the path to a formally machine-checked
 proof certificate.
 \end{abstract}
+
+\medskip
+\noindent\textbf{Keywords:} Erd\H{o}s--Gy\'arf\'as conjecture; power-of-two cycle;
+minimum degree; SAT modulo symmetries; forbidden subgraph; computer-assisted
+enumeration.
+
+\smallskip
+\noindent\textbf{2020 Mathematics Subject Classification:}
+05C38 (primary); 05C30, 05C85, 68V05 (secondary).
 
 \section{Introduction}
 \label{sec:intro}
@@ -248,12 +259,13 @@ added vertex.}
 \end{figure}
 
 \paragraph{Experimental setup.} For each $n$, the minimum-degree-3 CNF is generated
-by PySMS's \texttt{GraphEncodingBuilder($n$).minDegree(3)}, and the search is run by
-\texttt{smsg} with the invocation
-\begin{center}\small
-\texttt{smsg --vertices $n$ --all-graphs --hide-graphs
---forbidden-subgraph-file CYC --dimacs ENC}
-\end{center}
+by PySMS (the \texttt{minDegree(3)} constraint of its
+\texttt{GraphEncodingBuilder}), and the search is run by \texttt{smsg} with the
+invocation
+\begin{quote}\small\ttfamily\noindent
+smsg --vertices $n$ --all-graphs --hide-graphs\\
+\hspace*{1em}--forbidden-subgraph-file CYC --dimacs ENC
+\end{quote}
 where \texttt{CYC} lists $C_4, C_8, C_{16}$ (one per line, as
 $\langle k\rangle\ v_0\ v_1\ v_1\ v_2\ \cdots$) and \texttt{ENC} is the generated
 DIMACS file. We use SMS (\url{github.com/markirch/sat-modulo-symmetries}, version
@@ -340,13 +352,17 @@ Schur-number problems. (iii) \emph{Exploit structure.} Carr's result that a mini
 counterexample is predominantly cubic~\cite{carr2026} could be added as a
 propagator to prune the search and reach larger $n$. (iv) \emph{Other questions.}
 The same SMS-plus-forbidden-subgraph template applies directly to related
-cycle-spectrum problems. Most importantly, an independent third-party reproduction
-would close the remaining gap between a corroborated computation and an established
-result.
+cycle-spectrum problems. An independent reproduction, or the proof certificate of
+(ii), would further raise confidence in the result.
 
-\section*{Reproducibility}
-All code, the per-$n$ data, and the verification scripts are available at
+\section*{Code and data availability}
+All source code, the per-order data, the exact build script (with pinned tool
+commits), and the verification scripts are openly available, enabling independent
+reproduction of every value in Table~\ref{tab:results}, at
 \url{https://github.com/ArjunBalaji79/erdos-gyarfas-min-degree-3}.
+
+\section*{Disclosure statement}
+The author reports no competing interests.
 
 \section*{Disclosure of generative AI use}
 In preparing this work the author used Anthropic's Claude (the Claude~Opus~4.8
