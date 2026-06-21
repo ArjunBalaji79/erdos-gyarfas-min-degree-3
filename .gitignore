@@ -19,8 +19,9 @@ experiments/results/*.csv
 # Modal
 .modal/
 
-# LaTeX build artifacts
+# LaTeX build artifacts (PDFs are build products; the .tex source is tracked)
 paper/*.aux
 paper/*.log
 paper/*.out
 paper/*.synctex.gz
+paper/*.pdf

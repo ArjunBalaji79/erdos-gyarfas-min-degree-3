@@ -1,198 +1,104 @@
-# Erdős–Gyárfás for minimum-degree-3 graphs — CEGAR-SAT verification
+# Erdős–Gyárfás conjecture for minimum-degree-3 graphs
 
-A counterexample-guided (CEGAR) SAT search that verifies the **Erdős–Gyárfás
-conjecture** — every graph with minimum degree ≥ 3 contains a cycle whose length
-is a power of two — for all such graphs up to a frontier order `n`.
+A SAT-based verification that every graph of minimum degree at least 3 on **at most
+30 vertices** contains a cycle whose length is a power of two — establishing that
+any minimum-degree-3 counterexample to the **Erdős–Gyárfás conjecture** must have at
+least **31 vertices**.
 
-This is a clean rebuild from [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md),
-re-deriving the method from first principles with a full validation-gate suite.
+This raises the published *general* minimum-degree-3 frontier from `n ≥ 17` (Royle &
+Markström, ~2004) to `n ≥ 31`, and is, to our knowledge, the first application of
+SAT methods to this conjecture. Since the cubic class is contained in the
+minimum-degree-3 class, it also surpasses Markström's separate cubic bound of 30.
 
-**What this establishes (verified):** the method is fully reconstructed and
-validated (Gate 3 proves the encoding sound at n=10; Gate 4 reproduces the
-published n≤16 baseline). Two independent computational tracks then extend the
-**general** minimum-degree-3 frontier (counterexample needs ≥ N vertices), which
-had stood at **N ≥ 17** (Royle & Markström, ~2004) for two decades:
+> **Paper:** [`paper/erdos-gyarfas-sms.tex`](paper/erdos-gyarfas-sms.tex) — *A
+> SAT-Modulo-Symmetries verification of the Erdős–Gyárfás power-of-two cycle
+> conjecture for minimum-degree-3 graphs up to 30 vertices.*
 
-- **Pure-Python CEGAR-SAT** (this repo's own solver): verified n ≤ 19, each UNSAT
-  independently re-proven by a second solver and certified cycle-by-cycle ⟹
-  **bound ≥ 20**. ([`experiments/results.md`](erdos_gyarfas/experiments/results.md))
-- **SAT-Modulo-Symmetries** (Kirchweger–Szeider, with the Glasgow subgraph solver;
-  complete symmetry breaking): verified n ≤ 30 ⟹ **bound ≥ 31**, the first SAT/SMS
-  attack on this conjecture. ([`experiments/sms_results.md`](erdos_gyarfas/experiments/sms_results.md))
+## Result
 
-This advances the **general** (non-regular-allowed) frontier from 16 to 30 (bound ≥17 →
-≥31); and since general ⊇ cubic, verifying all min-degree-3 graphs on ≤30 vertices also
-surpasses Markström's separate **cubic** (3-regular) bound of 30. Soundness is anchored
-against nauty ground truth at n=10 and the published baseline at n≤16. (n=31 still running.)
+For each `n` we decide whether a minimum-degree-3 graph on `n` vertices exists that
+contains **no** `C₄`, `C₈`, or `C₁₆` (the power-of-two cycle lengths ≤ 30). The
+answer is "none" for every `n` from 17 to 30; together with the established `n ≤ 16`
+baseline this proves the bound.
 
-## The idea in one paragraph
+| n | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+|---|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+| result | UNSAT (no such graph) for all of the above |
 
-For each order `n` we ask a SAT solver for a graph that is (i) minimum-degree-3
-and (ii) free of every power-of-2 cycle we have seen so far. If the solver finds
-one, a **detector** looks for a power-of-2 cycle in it; if it finds one, we add a
-clause forbidding exactly that cycle and loop. If the detector finds *no*
-power-of-2 cycle, the model is a genuine counterexample and the search halts
-loudly. If the solver ever returns UNSAT, the conjecture holds for that `n`. The
-detector is the **sole certifier** — the SAT solver only drives refinement.
+Full data and timings: [`erdos_gyarfas/experiments/sms_results.md`](erdos_gyarfas/experiments/sms_results.md).
 
-## Property (a) — the one structural lemma we use (self-proved)
+## Two independent methods
 
-> In any minimum-size counterexample, the vertices of degree ≥ 4 form an
-> independent set.
+- **SAT Modulo Symmetries (SMS)** — the main result. SMS (Kirchweger–Szeider)
+  performs complete, isomorph-free graph generation; the Glasgow Subgraph Solver is
+  used as a complete forbidden-subgraph propagator for `C₄, C₈, C₁₆`. This reaches
+  `n = 30`. Driver: [`erdos_gyarfas/experiments/modal_sms.py`](erdos_gyarfas/experiments/modal_sms.py).
+- **CEGAR-SAT** — an independent, self-contained solver (PySAT/CaDiCaL, a DFS
+  power-of-two cycle detector, a lexicographic symmetry break) used as a
+  cross-check. It reaches `n = 19` and agrees with SMS there. Code in
+  [`erdos_gyarfas/sat/`](erdos_gyarfas/sat/); results in
+  [`erdos_gyarfas/experiments/results.md`](erdos_gyarfas/experiments/results.md).
 
-*Proof.* If adjacent `u, v` both have degree ≥ 4, delete edge `uv`: the graph
-still has min-degree ≥ 3, still has no power-of-2 cycle (deleting an edge creates
-none), and has fewer edges — contradicting minimality. ∎
+## Verification
 
-Encoded as: `high_v ↔ deg(v) ≥ 4` (a reified counter), then `¬high_u ∨ ¬high_v ∨
-¬edge(u,v)` for every edge. This is the only structural constraint the rigorous
-frontier relies on; Carr's (b)/(c) are not needed.
+A non-existence claim cannot be brute-forced at this scale, so the result is
+corroborated by several independent checks (no check produced a contradiction):
+an exact ground-truth count against `nauty` at `n = 10`, reproduction of the
+`n ≤ 16` baseline, agreement of the two solvers for `n ≤ 19`, robustness across two
+cardinality encodings and a second symmetry-breaking method, and positive controls.
+Details: [`erdos_gyarfas/experiments/verification.md`](erdos_gyarfas/experiments/verification.md).
 
-## Validation gates (run them; they are what make the result trustworthy)
-
-| Gate | What it checks | Test |
-|------|----------------|------|
-| 0 | reified ≥k counter is exact (brute force, all assignments) | `tests/test_reified_counter.py` |
-| 1 | `base ∧ min3` matches `geng -d3` as iso-classes (small n) | `tests/test_base_validation.py` |
-| 3 | **KEY:** at n=10, SAT models == nauty ground truth (`missing = extra = 0`) | `tests/test_cross_check_n10.py` |
-| 4 | bound ≥ 17 reproduced: n=4..16 UNSAT, property-(a) on/off agree | `tests/test_bound_gate.py` |
-| 5 | every forbidden cycle is a valid power-of-2 simple cycle, and a 2nd solver agrees UNSAT | `tests/test_certificate.py` |
-
-**Gate 3 is non-negotiable** — it catches an over-constrained encoding that would
-return UNSAT for the wrong reason. Re-run it whenever the encoding changes:
-
-```bash
-PYTHONPATH=. pytest tests/test_cross_check_n10.py -q
-```
-
-## How a frontier UNSAT is verified
-
-For large `n` there is no tractable independent ground truth, so each UNSAT is
-made auditable three ways (`erdos_gyarfas/sat/verify.py`):
-
-1. **Lemma certificate** — every refinement clause records the exact cycle it
-   forbids; the verifier re-checks each is a genuine simple cycle of power-of-two
-   length. A real counterexample avoids *all* power-of-two cycles, so it would
-   satisfy the formula — hence UNSAT (over these verified lemmas) means none exists.
-2. **Independent re-check** — the accumulated formula is re-solved from scratch
-   with a different backend (glucose42 vs the primary cadical195); both must
-   report UNSAT, guarding against a single-solver bug.
-3. **Soundness anchor** — Gate 3 proves the *encoding* drops no isomorphism class
-   at n=10, and Gate 4 reproduces the published n≤16 results.
-
-The Modal driver runs all three per size and stores the certificate (gzipped) and
-verdict in a persistent Volume.
-
-## Layout
+## Repository layout
 
 ```
 erdos_gyarfas/
-├── sat/
-│   ├── encoding.py     # edge vars, VarPool, reified Sinz ≥k counter
-│   ├── base.py         # base CNF, min-degree-3, model decode
-│   ├── structural.py   # property (a), C4-free, lex-canon symmetry break
-│   ├── detector.py     # power-of-2 cycle detector — the certifier
-│   ├── cegar.py        # the CEGAR loop
-│   └── enumerate.py    # model enumeration for the cross-checks
-├── ground_truth/
-│   ├── nauty.py        # geng / labelg wrappers, provable max-degree cap
-│   └── reference.py    # C4-free min-deg-3 reference set for Gate 3
+├── sat/            # CEGAR encoding: edge vars, reified counter, structural
+│                   # constraints, power-of-2 cycle detector, CEGAR loop, verifier
+├── ground_truth/   # nauty (geng/labelg) wrappers + reference sets for the gates
 └── experiments/
-    ├── run_frontier.py    # local per-size driver with wall-time budget
-    └── modal_frontier.py  # Modal cloud driver (detached, cost-guarded)
+    ├── modal_sms.py       # SMS + Glasgow frontier (the main result)
+    ├── modal_frontier.py  # CEGAR frontier on Modal (cross-check)
+    ├── run_frontier.py    # CEGAR frontier locally
+    ├── sms_results.md / results.md / verification.md
+tests/              # validation gates (Gates 0,1,3,4,5)
+paper/              # the manuscript (LaTeX source)
 ```
 
-## Requirements
+## Reproducing
 
-- Python ≥ 3.10, `python-sat`, `networkx` (`pip install -e .`)
-- **nauty** at the system level for the ground-truth gates: `brew install nauty`
-  (provides `geng`, `labelg`). Not needed for the frontier search itself.
-- Optional: `modal` for the cloud frontier (`pip install -e '.[cloud]'`).
-
-## Running the frontier
-
-Local, laddering n upward with a 45-minute per-size budget:
+### Local validation gates (fast)
+Requires Python ≥ 3.10, `python-sat`, `networkx`, and `nauty` (`geng`, `labelg`;
+`brew install nauty` / `apt install nauty`).
 
 ```bash
-PYTHONPATH=. python -m erdos_gyarfas.experiments.run_frontier \
-    --start 17 --end 23 --time-budget 2700
+pip install -e '.[dev]'
+PYTHONPATH=. pytest -q          # Gate 0 (counter), 1 (vs geng), 3 (n=10 cross-check), 4 (n≤16), 5 (certificates)
 ```
 
-Each UNSAT advances the bound by 1. A `WALL` (budget hit) is the stopping rule.
-A `SAT` result is a real counterexample and halts loudly.
-
-### Cloud (Modal) — detached, with hard cost guards
-
-The frontier needs only the solver + detector, so each size runs in its own
-1-core container. **Three cost guards:** a soft `time_budget` (graceful `WALL`), a
-hard Modal `timeout` that kills the container, and an entrypoint that refuses to
-dispatch unless `soft + margin ≤ hard` and prints the worst-case core-hours
-first. Results stream to a persistent Volume, so you can close your laptop.
+### SMS frontier (the main result)
+Requires a [Modal](https://modal.com) account (`pip install modal`). The container
+image builds SMS + the Glasgow Subgraph Solver from source (pinned commits are in
+`modal_sms.py`).
 
 ```bash
-# cheap smoke test first (one size, 90s):
-modal run erdos_gyarfas/experiments/modal_frontier.py::main --start 17 --end 17 --time-budget 90
+# soundness checks: n=10 forbidding only C4 -> 5 (matches nauty); n=6..16 -> 0
+modal run erdos_gyarfas/experiments/modal_sms.py::validate_main
 
-# real detached run:
-modal run --detach erdos_gyarfas/experiments/modal_frontier.py::main --start 17 --end 23
-
-# read results back any time:
-modal run erdos_gyarfas/experiments/modal_frontier.py::fetch
+# the frontier: n=17..30 (each returns UNSAT = no such graph)
+modal run --detach erdos_gyarfas/experiments/modal_sms.py::frontier_main --start 17 --end 30
+modal run erdos_gyarfas/experiments/modal_sms.py::fetch_main   # read results
 ```
 
-## Performance & frontier reach
+### CEGAR cross-check (no Modal needed for small n)
+```bash
+PYTHONPATH=. python -m erdos_gyarfas.experiments.run_frontier --start 17 --end 19
+```
 
-The bottleneck to reaching larger `n` is **symmetry breaking**, not solver speed.
-With the current sound-but-partial break (adjacent-transposition lex-leader),
-n=17 takes ~30s and ~85k refinements with cadical195; the salvage notes report
-~10.7k refinements there. That ~8× gap compounds (solve time grows ~4×/step as
-refinement clauses accumulate), so this implementation reaches ~n=20 in practice.
+## Citing
 
-Approaches measured and **ruled out** for closing the gap (so they aren't retried):
+If you use this work, please cite the paper (see `paper/`). A permanent archived
+release with a DOI is available via Zenodo.
 
-| Approach | Outcome |
-|----------|---------|
-| Full-transposition lex-leader | n=17: 57k refs but **net slower** (29→36s) — CNF 3.75× bigger |
-| Dynamic canonicity blocking (pynauty, model-blocking) | **Non-convergent** — exponentially many non-canonical labellings flood the loop |
-| BreakID static preprocessing | Builds & works on pigeonhole, but **detects no symmetry** here — saucy doesn't recognise the Sₙ action on edge-*pairs*, even on a symmetric shadow formula |
+## License
 
-**The real fix** is *complete* symmetry breaking via a propagator —
-[SAT-Modulo-Symmetries](https://github.com/markirch/sat-modulo-symmetries) — which
-prunes non-canonical graphs *during* search rather than blocking them after the
-fact. That is the documented next step to reach the salvage's n=23 (bound ≥ 24).
-(Note: the PyPI package `pysms` is an unrelated SMS-texting library, not this tool.)
-
-## Context & where this sits (literature)
-
-- The conjecture (Erdős–Gyárfás, 1995) is **open**: no counterexample is known;
-  Erdős offered $100 for a proof / $50 for a counterexample.
-- The published **general minimum-degree-3** verification frontier is **n ≥ 17**
-  (all such graphs ≤16 verified), from computer searches by **Gordon Royle and
-  Klas Markström** — and it has not been extended in ~20 years. The **cubic**
-  (3-regular) case is much stronger: **n ≥ 30** (Markström, *Congr. Numer.* 171
-  (2004) 179–192). So the only *new* ground for a general-graph search lies in the
-  **non-cubic** min-degree-3 graphs at 17 ≤ n ≤ 29.
-- **No SAT or SAT-Modulo-Symmetries method has ever been applied to this
-  conjecture** (checked against Szeider's 2025 SMS survey) — so a SAT/CEGAR attack
-  is methodologically new for it.
-- Structural state of the art: A. Carr, *Every Minimal Counterexample to the
-  Erdős–Gyárfás Conjecture is Predominantly Cubic*, arXiv:2605.22844 (2026, preprint)
-  — minimal counterexamples are ≥4/7 degree-3. This subsumes property (a) here.
-
-**Honest novelty:** a verified extension of the **general** frontier past 16,
-using the first SAT method, is a genuine but **narrow** contribution; a compelling
-writeup needs to reach meaningfully beyond n=17 (via complete symmetry breaking)
-and to cite/build on Carr (2026).
-
-## Notes & honest caveats
-
-- The lower bound is only as sound as the encoding; the gates (especially Gate 3)
-  are the guarantee. The symmetry break is *sound* (never drops an iso-class), so
-  it can only affect speed, not correctness — Gate 3 confirms this.
-- Ladder by 1: the minimality argument behind property (a) needs every smaller
-  order verified first.
-- "Verified" here means the three checks above (certificate + independent
-  re-check + Gate 3/4 anchors), not a single formally-checked DRAT proof.
-
-See [`erdos-gyarfas-salvage.md`](erdos-gyarfas-salvage.md) for the original
-salvage notes this rebuild is based on.
+[MIT](LICENSE) © 2026 Arjun Balaji.
