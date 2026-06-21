@@ -36,4 +36,7 @@ author takes full responsibility for all content and claims.
 Thank you for your consideration.
 
 Sincerely,
-[Author name], [Affiliation], [email]
+Arjun Balaji
+Columbia University
+ORCID: 0009-0005-1790-0034
+[email — add your contact email]
