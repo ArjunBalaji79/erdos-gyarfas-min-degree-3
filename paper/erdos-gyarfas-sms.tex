@@ -30,24 +30,22 @@ computational result; see \S\ref{sec:verification} for the verification and
 \maketitle
 
 \begin{abstract}
-The Erd\H{o}s--Gy\'arf\'as conjecture (1995) asserts that every graph with
-minimum degree at least $3$ contains a cycle whose length is a power of two.
-The conjecture is open; prior computer search established that any counterexample
-on the \emph{general} minimum-degree-3 class has at least $17$ vertices
-(Royle and Markstr\"om), and that any \emph{cubic} (3-regular) counterexample has
-at least $30$ vertices (Markstr\"om, 2004). We give, to our knowledge, the first
-application of SAT-based methods to this conjecture. Using SAT Modulo Symmetries
-(SMS) with the Glasgow subgraph solver as a complete forbidden-subgraph
-propagator, we verify that \emph{every} minimum-degree-3 graph on at most $30$
-vertices contains a cycle of length $4$, $8$, or $16$. Consequently any general
-minimum-degree-3 counterexample must have at least $31$ vertices, improving the
-two-decade-old general bound from $17$ to $31$; since the cubic class is a
-subclass, this also improves the cubic bound from $30$ to $31$. We corroborate the
-result with an independent ground-truth check at $n=10$, reproduction of the
-$n\le 16$ baseline, agreement with an independent CEGAR-SAT solver for
-$n \le 19$, robustness to two cardinality encodings and a second symmetry-breaking
-method, and positive controls; we discuss the path to a formally machine-checked
-proof certificate.
+The Erd\H{o}s--Gy\'arf\'as conjecture (1995) asserts that every graph of minimum
+degree at least $3$ contains a cycle whose length is a power of two. It is open.
+Prior computer search established that any general minimum-degree-3 counterexample
+has at least $17$ vertices (Royle and Markstr\"om), and any cubic (3-regular)
+counterexample at least $30$ (Markstr\"om, 2004). We give, to our knowledge, the
+first application of SAT-based methods to this conjecture. Using SAT Modulo
+Symmetries with the Glasgow subgraph solver as a complete forbidden-subgraph
+propagator, we verify that every minimum-degree-3 graph on at most $30$ vertices
+contains a cycle of length $4$, $8$, or $16$. Hence any general minimum-degree-3
+counterexample has at least $31$ vertices, improving the two-decade-old general
+bound from $17$ to $31$; since the cubic class is contained in this class, the cubic
+bound improves from $30$ to $31$ as well. We corroborate the result with an exact
+ground-truth check at $n=10$, reproduction of the $n\le 16$ baseline, agreement with
+an independent CEGAR-SAT solver for $n\le 19$, and robustness across cardinality
+encodings and symmetry-breaking methods, and we discuss the path to a
+machine-checked proof certificate.
 \end{abstract}
 
 \medskip
