@@ -17,7 +17,7 @@
 \newcommand{\degmin}{\delta}
 
 \title{A SAT-Modulo-Symmetries verification of the Erd\H{o}s--Gy\'arf\'as
-power-of-two cycle conjecture for minimum-degree-3 graphs up to 30 vertices}
+power-of-two cycle conjecture for minimum-degree-3 graphs up to 31 vertices}
 
 \author{Arjun Balaji\thanks{Columbia University. ORCID:
 \href{https://orcid.org/0009-0005-1790-0034}{0009-0005-1790-0034}. This is a
@@ -37,11 +37,12 @@ has at least $17$ vertices (Royle and Markstr\"om), and any cubic (3-regular)
 counterexample at least $30$ (Markstr\"om, 2004). We give, to our knowledge, the
 first application of SAT-based methods to this conjecture. Using SAT Modulo
 Symmetries with the Glasgow subgraph solver as a complete forbidden-subgraph
-propagator, we verify that every minimum-degree-3 graph on at most $30$ vertices
-contains a cycle of length $4$, $8$, or $16$. Hence any general minimum-degree-3
-counterexample has at least $31$ vertices, improving the two-decade-old general
-bound from $17$ to $31$; since the cubic class is contained in this class, the cubic
-bound improves from $30$ to $31$ as well. We corroborate the result with an exact
+propagator, we verify that every minimum-degree-3 graph on at most $31$ vertices
+contains a cycle of length $4$, $8$, or $16$, settling the entire range in which
+these are the only admissible power-of-two cycle lengths. Hence any general
+minimum-degree-3 counterexample has at least $32$ vertices, improving the
+two-decade-old general bound from $17$ to $32$; since the cubic class is contained
+in this class, the cubic bound improves from $30$ to $32$ as well. We corroborate the result with an exact
 ground-truth check at $n=10$, reproduction of the $n\le 16$ baseline, agreement with
 an independent CEGAR-SAT solver for $n\le 19$, and robustness across cardinality
 encodings and symmetry-breaking methods, and we discuss the path to a
@@ -103,26 +104,29 @@ minimum-degree-3 graphs on $n$ vertices for every $n$ up to $30$:
 
 \begin{theorem}
 \label{thm:main}
-Every graph with minimum degree at least $3$ on at most $30$ vertices contains a
+Every graph with minimum degree at least $3$ on at most $31$ vertices contains a
 cycle of length $4$, $8$, or $16$. Consequently, any minimum-degree-3
-counterexample to the Erd\H{o}s--Gy\'arf\'as conjecture has at least $31$ vertices.
+counterexample to the Erd\H{o}s--Gy\'arf\'as conjecture has at least $32$ vertices.
 \end{theorem}
 
-This improves the general bound from $17$ to $31$, a $+14$-vertex extension over a
+This improves the general bound from $17$ to $32$, a $+15$-vertex extension over a
 search space that, unlike the cubic case, includes all non-regular graphs of
-minimum degree $3$.
+minimum degree $3$. By Proposition~\ref{prop:reduction} below, order $31$ is
+exactly the last order at which $C_4$, $C_8$, $C_{16}$ are the only admissible
+power-of-two cycle lengths, so Theorem~\ref{thm:main} settles that entire regime;
+$C_{32}$ first becomes possible at $n=32$.
 
-\paragraph{General versus cubic (a point to read carefully).} Our verified order,
-$30$, coincides numerically with Markstr\"om's cubic \emph{bound} of $30$, but the
-two statements are different and should not be conflated. Markstr\"om verified the
-\emph{cubic} class up to order $29$ (cubic bound $\ge 30$). We verify the
-\emph{entire} minimum-degree-3 class (a strictly larger family, dominated by
-non-regular graphs) up to order $30$ (general bound $\ge 31$). Since the cubic
-class is contained in the minimum-degree-3 class, our search in particular
-verifies all cubic graphs on $\le 30$ vertices, which incidentally also improves
-the cubic bound from $30$ to $31$. Thus the genuinely new content is twofold: the
-\emph{non-cubic} minimum-degree-3 graphs on $17 \le n \le 30$ vertices, and the
-methodology (SAT/SMS), which had not previously been applied to this conjecture.
+\paragraph{General versus cubic.} The two prior frontiers should not be conflated.
+Markstr\"om verified the \emph{cubic} class up to order $29$ (cubic bound
+$\ge 30$); the \emph{general} class had been verified only up to order $16$. We
+verify the entire minimum-degree-3 class (a strictly larger family, dominated by
+non-regular graphs) up to order $31$, so the general bound rises to $\ge 32$, and,
+since the cubic class is contained in the minimum-degree-3 class, our search also
+covers all cubic graphs on $30$ and $31$ vertices, raising the cubic bound from
+$30$ to $32$ as well. Thus the genuinely new content is twofold: the
+\emph{non-cubic} minimum-degree-3 graphs on $17 \le n \le 31$ vertices together
+with the cubic graphs on $30 \le n \le 31$ vertices, and the methodology (SAT/SMS),
+which had not previously been applied to this conjecture.
 
 \paragraph{Related work.} The conjecture is known for several restricted classes:
 $K_{1,m}$-free graphs~\cite{shauger}, planar claw-free graphs~\cite{daniel-shauger},
@@ -161,13 +165,13 @@ are valid cycle lengths (at least $3$) and at most $n \le 31$ are exactly $4, 8,
 16$; the next one, $32$, exceeds $n$.
 \end{proof}
 
-By Proposition~\ref{prop:reduction}, if for every $n \le 30$ no minimum-degree-3
+By Proposition~\ref{prop:reduction}, if for every $n \le 31$ no minimum-degree-3
 graph on $n$ vertices contains $C_4$, $C_8$, or $C_{16}$ is found, then no
-minimum-degree-3 counterexample on at most $30$ vertices exists. A minimum-degree-3
+minimum-degree-3 counterexample on at most $31$ vertices exists. A minimum-degree-3
 graph requires $n \ge 4$, and for $n \le 16$ the conjecture is the established
 baseline, which we reproduce ($\S\ref{sec:verification}$; the smallest orders $n=4,5$
 are also covered by the independent CEGAR check below, and hold trivially since
-$K_4$ contains $C_4$). It therefore suffices to settle $17 \le n \le 30$, which is the
+$K_4$ contains $C_4$). It therefore suffices to settle $17 \le n \le 31$, which is the
 content of Theorem~\ref{thm:main}.
 
 \paragraph{SAT Modulo Symmetries.} SMS performs complete, isomorph-free
@@ -203,7 +207,7 @@ both finish ($n \le 19$, \S\ref{sec:verification}).
 \section{Results}
 \label{sec:results}
 
-Table~\ref{tab:results} reports, for each $n$ from $17$ to $30$, that SMS finds
+Table~\ref{tab:results} reports, for each $n$ from $17$ to $31$, that SMS finds
 \emph{no} minimum-degree-3 graph avoiding all of $C_4, C_8, C_{16}$ (solution count
 $0$). All runs used a single CPU core.
 
@@ -227,6 +231,7 @@ $n$ & count & wall time (s) \\
 28 & 0 & 1892.0 \\
 29 & 0 & 2342.8 \\
 30 & 0 & 6888.9 \\
+31 & 0 & 7351.4 \\
 \bottomrule
 \end{tabular}
 \caption{SMS decision per order $n$: no minimum-degree-3 graph on $n$ vertices
@@ -241,12 +246,12 @@ proves Theorem~\ref{thm:main}.}
 \begin{semilogyaxis}[
   width=0.82\linewidth, height=5.6cm,
   xlabel={order $n$}, ylabel={wall time (s)},
-  xtick={17,19,21,23,25,27,29}, ymin=1, ymax=15000,
+  xtick={17,19,21,23,25,27,29,31}, ymin=1, ymax=15000,
   grid=both, mark size=1.4pt,
 ]
 \addplot[mark=*] coordinates {
 (17,2.9)(18,7.8)(19,24.1)(20,27.8)(21,19.3)(22,101.1)(23,202.9)(24,148.3)
-(25,339.8)(26,414.8)(27,1000.3)(28,1892.0)(29,2342.8)(30,6888.9)
+(25,339.8)(26,414.8)(27,1000.3)(28,1892.0)(29,2342.8)(30,6888.9)(31,7351.4)
 };
 \end{semilogyaxis}
 \end{tikzpicture}
@@ -270,7 +275,7 @@ are available in the accompanying repository.
 \section{Verification}
 \label{sec:verification}
 
-A non-existence claim at $n=30$ cannot be brute-forced (exhaustive generation of
+A non-existence claim at $n=31$ cannot be brute-forced (exhaustive generation of
 minimum-degree-3 graphs is infeasible beyond roughly $n=13$), so we corroborate
 Theorem~\ref{thm:main} with several independent checks. \emph{No check produced a
 contradiction.}
@@ -306,8 +311,9 @@ propagator justifies its own clauses; we leave this as the principal next step.
 \label{sec:limitations}
 
 Theorem~\ref{thm:main} advances the general minimum-degree-3 frontier from $16$ to
-$30$ vertices (bound $17 \to 31$) and, as a byproduct, the cubic frontier from
-$29$ to $30$ (bound $30 \to 31$). Two caveats apply. First, this is a
+$31$ vertices (bound $17 \to 32$) and, as a byproduct, the cubic frontier from
+$29$ to $31$ (bound $30 \to 32$), settling the entire range in which $C_4$, $C_8$,
+$C_{16}$ are the only admissible power-of-two cycles. Two caveats apply. First, this is a
 \emph{computational} result: its soundness rests on SMS's isomorph-free generation,
 the completeness of the Glasgow subgraph propagator, and the correctness of the
 min-degree encoding. The checks of \S\ref{sec:verification} corroborate this
@@ -325,15 +331,18 @@ We have given the first SAT-based attack on the Erd\H{o}s--Gy\'arf\'as conjectur
 Casting the question as ``does a minimum-degree-3 graph with no $C_4$, $C_8$, or
 $C_{16}$ exist?'' and discharging it with SAT Modulo Symmetries and the Glasgow
 subgraph propagator, we verified the conjecture for all minimum-degree-3 graphs on
-at most $30$ vertices, raising the general lower bound on a counterexample from
-$17$ to $31$ (Theorem~\ref{thm:main}). The decisive ingredient is complete,
-in-search symmetry breaking: a conventional CEGAR encoding stalls near $n=20$,
-whereas SMS reaches $n=30$ in under two hours of single-core time.
+at most $31$ vertices, raising the general lower bound on a counterexample from
+$17$ to $32$ (Theorem~\ref{thm:main}) and settling the entire regime in which
+$C_4$, $C_8$, $C_{16}$ are the only admissible power-of-two cycles. The decisive
+ingredient is complete, in-search symmetry breaking: a conventional CEGAR encoding
+stalls near $n=20$, whereas SMS decides each order up to $31$ in at most about two
+hours of single-core time.
 
-Several directions remain. (i) \emph{Push the frontier.} The runtimes
-(Figure~\ref{fig:runtime}) suggest $n=31$ and a few further orders are within reach
-of a longer single run or modest parallelism; the present search was halted at
-$n=30$. (ii) \emph{A machine-checked certificate.} Replacing the verification
+Several directions remain. (i) \emph{Push the frontier.} The next order, $n=32$,
+is the first at which a cycle of length $32$ can occur, so extending the search
+requires adding $C_{32}$ to the forbidden set; the runtime trend
+(Figure~\ref{fig:runtime}) suggests a few further orders are within reach with
+modest parallelism. (ii) \emph{A machine-checked certificate.} Replacing the verification
 checks of \S\ref{sec:verification} by an end-to-end, formally verified proof (via
 the certified-SMS proof-logging machinery, so that the forbidden-subgraph and
 canonicity propagators justify their own clauses) would put the result on the
