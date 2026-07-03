@@ -89,7 +89,7 @@ def _write_cycle_file(path, lengths):
 results_volume = modal.Volume.from_name("erdos-gyarfas-sms-results", create_if_missing=True)
 VOL = "/results"
 
-HARD_TIMEOUT_S = int(4.5 * 60 * 60)  # 4.5h hard ceiling per container
+HARD_TIMEOUT_S = int(8 * 60 * 60)  # 8h hard ceiling per container (n=31 needs ~4-6h)
 # (pass --time-budget 14400 = 4h for the smsg subprocess; ~1800s headroom to save)
 
 
