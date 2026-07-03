@@ -28,3 +28,4 @@ paper/*.pdf
 
 # Venue-specific submission packages (local only; contains suggested reviewers etc.)
 paper/eandc/
+paper/ieee/
