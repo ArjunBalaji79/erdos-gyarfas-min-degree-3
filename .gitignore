@@ -25,3 +25,6 @@ paper/*.log
 paper/*.out
 paper/*.synctex.gz
 paper/*.pdf
+
+# Venue-specific submission packages (local only; contains suggested reviewers etc.)
+paper/eandc/
