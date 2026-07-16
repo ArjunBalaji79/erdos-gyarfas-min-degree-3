@@ -21,7 +21,10 @@ baseline this proves the bound.
 
 | n | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
 |---|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| result | UNSAT (no such graph) for all of the above |
+| result | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT | UNSAT |
+| time (s) | 2.9 | 7.8 | 24.1 | 27.8 | 19.3 | 101 | 203 | 148 | 340 | 415 | 1000 | 1892 | 2343 | 6889 | 7351 |
+
+UNSAT = no such graph exists at that order.
 
 Full data and timings: [`erdos_gyarfas/experiments/sms_results.md`](erdos_gyarfas/experiments/sms_results.md).
 
