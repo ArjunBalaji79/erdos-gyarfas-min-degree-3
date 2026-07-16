@@ -19,13 +19,6 @@ experiments/results/*.csv
 # Modal
 .modal/
 
-# LaTeX build artifacts (PDFs are build products; the .tex source is tracked)
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.synctex.gz
-paper/*.pdf
-
-# Venue-specific submission packages (local only; contains suggested reviewers etc.)
-paper/eandc/
-paper/ieee/
+# Manuscripts and venue submission packages are local-only (not part of the
+# public code artifact; the NeurIPS submission uses an anonymized mirror)
+paper/

@@ -12,10 +12,6 @@ minimum-degree-3 class, it also surpasses Markström's separate cubic bound of 3
 Verifying through `n = 31` settles the entire range in which `C₄, C₈, C₁₆` are the
 only admissible power-of-two cycle lengths (`C₃₂` first fits at `n = 32`).
 
-> **Paper:** [`paper/erdos-gyarfas-sms.tex`](paper/erdos-gyarfas-sms.tex) — *A
-> SAT-Modulo-Symmetries verification of the Erdős–Gyárfás power-of-two cycle
-> conjecture for minimum-degree-3 graphs up to 31 vertices.*
-
 ## Result
 
 For each `n` we decide whether a minimum-degree-3 graph on `n` vertices exists that
@@ -63,7 +59,6 @@ erdos_gyarfas/
     ├── run_frontier.py    # CEGAR frontier locally
     ├── sms_results.md / results.md / verification.md
 tests/              # validation gates (Gates 0,1,3,4,5)
-paper/              # the manuscript (LaTeX source)
 ```
 
 ## Reproducing
@@ -95,11 +90,6 @@ modal run erdos_gyarfas/experiments/modal_sms.py::fetch_main   # read results
 ```bash
 PYTHONPATH=. python -m erdos_gyarfas.experiments.run_frontier --start 17 --end 19
 ```
-
-## Citing
-
-If you use this work, please cite the paper (see `paper/`). A permanent archived
-release with a DOI is available via Zenodo.
 
 ## License
 
